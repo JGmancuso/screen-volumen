@@ -4,6 +4,8 @@ Created on Wed May  5 14:25:45 2021
 
 @author: jgome
 """
+!pip install yfinance
+
 import pandas as pd
 import numpy as np
 from scipy import stats
