@@ -4,8 +4,6 @@ Created on Wed May  5 14:25:45 2021
 
 @author: jgome
 """
-import os.path
-import os
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -15,6 +13,9 @@ from datetime import timedelta
 from bs4 import BeautifulSoup
 import requests
 from datetime import datetime
+import mplfinance as mpf
+import yfinance as yf
+import ta
 import datetime
 import os.path
 
