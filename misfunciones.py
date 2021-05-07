@@ -126,6 +126,7 @@ def volacumrango(inicio,fin,activo):
   return volumen 
 
 def matriztrabajo(tickers,start,end):
+  
   import yfinance as yf
   
   sd = start
