@@ -416,6 +416,7 @@ def grafcomp(data,intervalo=90,subind='',activo='',sector=''):
 
 
 def actualizacion(nombre,intervalo,activos='no'):
+  import yfinance as yf
   
   
   archivo="/content/drive/MyDrive/%s.csv" %str(nombre)
