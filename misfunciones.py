@@ -508,6 +508,7 @@ def actualizacion(nombre,intervalo,activos='no'):
   return df
 
 def base1m(lista='',nombre='',guardar='si'):
+  
   import yfinance as yf
 
   '''
@@ -535,6 +536,7 @@ def base1m(lista='',nombre='',guardar='si'):
 
     for i in tickers:
       
+      import yfinance as yf
       df1=yf.download(tickers=i, start=sd, end=ed,interval='1m')
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -544,7 +546,7 @@ def base1m(lista='',nombre='',guardar='si'):
   else:
 
     for i in lista:
-      
+      import yfinance as yf
       df1=yf.download(tickers=i, start=sd, end=ed,interval='1m')
       df1['activo']=i
       df1.reset_index(inplace=True)
