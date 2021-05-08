@@ -136,7 +136,7 @@ def matriztrabajo(tickers,start,end):
   tickers= tickers# funcion que determine los ticker automaticamente
   #df = yf.download(tickers=tickers, start=sd, end=ed)
   df=pd.DataFrame()
-  info=pd.read_csv("/content/gdrive/My Drive/Colab Notebooks/activosector.csv",index_col='activo')
+  info=pd.read_csv("/content/gdrive/My Drive/Colab Notebooks/activosector.csv",index_col='activo')#hola
   del info['Unnamed: 0']
 
   if len(tickers)>len(info.index):
