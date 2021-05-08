@@ -507,6 +507,7 @@ def actualizacion(nombre,intervalo,activos='no'):
   return df
 
 def base1m(lista='',nombre='',guardar='si'):
+  import yfinance as yf
 
   '''
   La base se guarda por defecto.
@@ -556,6 +557,7 @@ def base1m(lista='',nombre='',guardar='si'):
   return df
 
 def base5m(lista='',nombre='',guardar='si'):
+  import yfinance as yf
 
   '''
   La base se guarda por defecto.
@@ -604,6 +606,7 @@ def base5m(lista='',nombre='',guardar='si'):
   return df
 
 def base15m(lista='',nombre='',guardar='si'):
+  import yfinance as yf
 
   '''
   La base se guarda por defecto.
@@ -652,6 +655,7 @@ def base15m(lista='',nombre='',guardar='si'):
   return df
 
 def base30m(lista='',nombre='',guardar='si'):
+  import yfinance as yf
 
   '''
   La base se guarda por defecto.
@@ -700,6 +704,7 @@ def base30m(lista='',nombre='',guardar='si'):
   return df
 
 def base1h(lista='',nombre='',guardar='si'):
+  import yfinance as yf
 
   '''
   La base se guarda por defecto.
