@@ -342,6 +342,7 @@ def comportamiento(df,periodo=90,industria='no'):
         df2[sector] = data
 
     df3=df.data[df.data.activo=='^MERV']['Close']
+    df3=(df3/df3.shift(1))-1
     df3=(df3-df3.min())/(df3.max()-df3.min())
     df3.name='Indice'
 
