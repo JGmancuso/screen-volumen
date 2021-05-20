@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 import requests
 from datetime import datetime
 #import mplfinance as mpf
-import ta
+#import ta
 import datetime
 import os.path
 
