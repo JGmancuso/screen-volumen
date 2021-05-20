@@ -15,7 +15,7 @@ from datetime import timedelta
 from bs4 import BeautifulSoup
 import requests
 from datetime import datetime
-import mplfinance as mpf
+#import mplfinance as mpf
 import ta
 import datetime
 import os.path
