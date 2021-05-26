@@ -758,6 +758,203 @@ def base1h(lista='',nombre='',guardar='si'):
 
   return df
 
+def screen_industrias(df):
+
+  #PRIMERA PARTE
+  base=agrupar_volumen(df,'industria')
+  #normalizar?? No por que no tiene nada que ver que tenga mas activos y por ende no va a tener mas actividad inusual.
+  inusual=actividad_inusual(base)
+  cuenta=conteo(inusual)
+
+  #SEGUNDA PARTE
+
+  noventad=cuenta['intervalo90-60'].sort_values(ascending=False).head(10)
+  sesentad=cuenta['intervalo60-30'].sort_values(ascending=False).head(10)
+  treintad=cuenta['intervalo30-15'].sort_values(ascending=False).head(10)
+  quinced=cuenta['intervalo15-0'].sort_values(ascending=False).head(10)
+
+  movmaduro=noventad.loc[noventad.index.isin(treintad.index)].index
+  movenmad=sesentad.loc[sesentad.index.isin(treintad.index)].index
+  movinic=treintad.loc[treintad.index.isin(quinced.index)].index
+
+  #TERCERA PARTE
+  base2=inusual['V10vs50'].unstack(1).resample('W-FRI').sum()
+
+  #crecimientto
+  crecimiento=((base2/base2.shift(1))-1).replace([np.nan,np.inf,-np.inf],0).cumsum()
+
+  acummej=crecimiento.iloc[-1].sort_values(ascending=False).head(10)
+
+  #SECTORES QUE MAS CRECIO en promedio ACUMULADO EN PROMEDIO
+
+  acumprommej=crecimiento[str(datetime.datetime.utcnow().year)].mean()
+  acumprommej=acumprommej.sort_values(ascending=False).head(10)
+
+  #SECTORES QUE MAS % entro en 60-30 dias
+  data60=base2.iloc[-40:].copy()
+  data30=base2.iloc[-20:].copy()
+
+
+  crec60=((data60/data60.shift(1))-1).replace([np.nan,np.inf,-np.inf],0).cumsum()
+  mascrec60=crec60.iloc[-1].sort_values(ascending=False).head(10)
+
+  crec30=((data30/data30.shift(1))-1).replace([np.nan,np.inf,-np.inf],0).cumsum()
+  mascrec30=crec30.iloc[-1].sort_values(ascending=False).head(10)
+
+  crecacum=acummej.index
+  crecacumprom=acumprommej.index
+  crecconstante=mascrec60.loc[mascrec60.index.isin(mascrec30.index)].index
+
+  resumen=set(movmaduro.tolist()+movenmad.tolist()+movinic.tolist()+crecacum.tolist()+crecacumprom.tolist()+crecconstante.tolist())
+  nombres=['Maduro','En_Maduracion','Inic_Mov','Inic_Fuerte','Crec_Acum','Crec_A_Prom','Crec_Const']
+
+  resumen=pd.DataFrame(np.zeros((len(resumen),len(nombres))),columns=nombres,index=resumen)
+
+  for i in resumen.index:
+    if i in movmaduro:
+      resumen.loc[i,'Maduro']='X'
+
+  for i in resumen.index:
+    if i in movenmad:
+      resumen.loc[i,'En_Maduracion']='X'
+
+  for i in resumen.index:
+    if i in movinic:
+      resumen.loc[i,'Inic_Mov']='X'
+
+  for i in resumen.index:
+    if i in movinic and i in mascrec30:
+      resumen.loc[i,'Inic_Fuerte']='X'
+
+  for i in resumen.index:
+    if i in crecacum:
+      resumen.loc[i,'Crec_Acum']='X'
+
+  for i in resumen.index:
+    if i in crecacumprom:
+      resumen.loc[i,'Crec_A_Prom']='X'
+
+  for i in resumen.index:
+    if i in crecconstante:
+      resumen.loc[i,'Crec_Const']='X'
+
+  return resumen
+
+def screen_activos(df,industrias='',lideres='no',industrias_activas='si'):
+
+  if industrias_activas=='si':
+
+    listadoact=df.data[df.data['industria'].isin(industrias.index)].groupby(['Date','industria','activo']).sum()
+
+  elif lideres=='si':
+
+    lideres=['ALUA','BBAR','BMA','BYMA','CEPU','COME','CRES','CVH','EDN','GGAL','HARG','LOMA','MIRG','PAMP','SUPV','TECO2','TGNO4','TGSU','TRAN','TXAR','VALO','YPF']
+    for i in range(len(lideres)):
+      lideres[i]+=".BA"
+
+    listadoact=df.data.groupby(['Date','industria','activo']).sum()
+    listadoact=listadoact.loc[slice(None),slice(None),lideres]# solo lideres  
+
+  
+  else:
+    listadoact=df.data.groupby(['Date','industria','activo']).sum()
+
+    tickets=listadoact.index.get_level_values(2).unique().tolist()
+    lideres=['ALUA','BBAR','BMA','BYMA','CEPU','COME','CRES','CVH','EDN','GGAL','HARG','LOMA','MIRG','PAMP','SUPV','TECO2','TGNO4','TRAN','TXAR','VALO','YPFD']
+    for i in range(len(lideres)):
+      lideres[i]+=".BA"
+    for i in lideres:
+      tickets.pop(tickets.index(i))
+
+    #listadoact=df.data.groupby(['Date','industria','activo']).sum()
+    listadoact=listadoact.loc[slice(None),slice(None),tickets]# solo lideres  
+
+
+
+  #PRIMERA PARTE
+  base=actividad_inusual(listadoact)
+  base=base.reindex().groupby(['Date','activo']).sum()
+  #normalizar?? No por que no tiene nada que ver que tenga mas activos y por ende no va a tener mas actividad inusual.
+  inusual=actividad_inusual(base)
+  cuenta=conteo(inusual)
+
+  #SEGUNDA PARTE
+
+  noventad=cuenta['intervalo90-60'].sort_values(ascending=False).head(10)
+  sesentad=cuenta['intervalo60-30'].sort_values(ascending=False).head(10)
+  treintad=cuenta['intervalo30-15'].sort_values(ascending=False).head(10)
+  quinced=cuenta['intervalo15-0'].sort_values(ascending=False).head(10)
+
+  movmaduro=noventad.loc[noventad.index.isin(treintad.index)].index
+  movenmad=sesentad.loc[sesentad.index.isin(treintad.index)].index
+  movinic=treintad.loc[treintad.index.isin(quinced.index)].index
+
+  #TERCERA PARTE
+  #tengo que igualar que quede 2 en indice y uno en columna.
+
+  #base2=inusual['V10vs50'].unstack(1).resample('W-FRI').sum()
+  base2=inusual.reindex().groupby(['Date','activo']).sum()['V10vs50'].unstack(1).resample('W-FRI').sum()
+
+  #crecimientto
+  crecimiento=((base2/base2.shift(1))-1).replace([np.nan,np.inf,-np.inf],0).cumsum()
+
+  acummej=crecimiento.iloc[-1].sort_values(ascending=False).head(10)
+
+  #SECTORES QUE MAS CRECIO en promedio ACUMULADO EN PROMEDIO
+
+  acumprommej=crecimiento[str(datetime.datetime.utcnow().year)].mean()
+  acumprommej=acumprommej.sort_values(ascending=False).head(10)
+
+  #SECTORES QUE MAS % entro en 60-30 dias
+  data60=base2.iloc[-40:].copy()
+  data30=base2.iloc[-20:].copy()
+
+
+  crec60=((data60/data60.shift(1))-1).replace([np.nan,np.inf,-np.inf],0).cumsum()
+  mascrec60=crec60.iloc[-1].sort_values(ascending=False).head(10)
+
+  crec30=((data30/data30.shift(1))-1).replace([np.nan,np.inf,-np.inf],0).cumsum()
+  mascrec30=crec30.iloc[-1].sort_values(ascending=False).head(10)
+
+  crecacum=acummej.index
+  crecacumprom=acumprommej.index
+  crecconstante=mascrec60.loc[mascrec60.index.isin(mascrec30.index)].index
+
+  resumen=set(movmaduro.tolist()+movenmad.tolist()+movinic.tolist()+crecacum.tolist()+crecacumprom.tolist()+crecconstante.tolist())
+  nombres=['Maduro','En_Maduracion','Inic_Mov','Inic_Fuerte','Crec_Acum','Crec_A_Prom','Crec_Const']
+
+  resumen=pd.DataFrame(np.zeros((len(resumen),len(nombres))),columns=nombres,index=resumen)
+
+  for i in resumen.index:
+    if i in movmaduro:
+      resumen.loc[i,'Maduro']='X'
+
+  for i in resumen.index:
+    if i in movenmad:
+      resumen.loc[i,'En_Maduracion']='X'
+
+  for i in resumen.index:
+    if i in movinic:
+      resumen.loc[i,'Inic_Mov']='X'
+
+  for i in resumen.index:
+    if i in movinic and i in mascrec30:
+      resumen.loc[i,'Inic_Fuerte']='X'
+
+  for i in resumen.index:
+    if i in crecacum:
+      resumen.loc[i,'Crec_Acum']='X'
+
+  for i in resumen.index:
+    if i in crecacumprom:
+      resumen.loc[i,'Crec_A_Prom']='X'
+
+  for i in resumen.index:
+    if i in crecconstante:
+      resumen.loc[i,'Crec_Const']='X'
+
+  return resumen
+
 class screener():
 
   def __init__(self,tickers,inicio,fin):
