@@ -955,6 +955,100 @@ def screen_activos(df,industrias='',lideres='no',industrias_activas='si'):
 
   return resumen
 
+def preparar_corr(df):
+
+  df1=df.data.copy()
+  df1.reset_index(inplace=True)
+  #Agrupacion por semana INDUSTRIA / ACTIVO
+  df1=df1.groupby([pd.Grouper(key='Date', freq='W-FRI'),'activo','industria'])['Close'].last()
+  # columnas LEVEL=0 son las industrias/LEVEL=1 son los activos
+  df1=df1.unstack(level=(1,2)).swaplevel(1,0,axis=1)
+  df1.fillna(method='ffill', inplace=True)
+  df2 = pd.DataFrame()
+  #normaliza entre 0 ~ 1 y suma los sectores/idustria para poder calcular la correlacion.
+
+  for sector in df1.columns.levels[0]:
+      data = (df1[sector] - df1[sector].min()) / (df1[sector].max() - df1[sector].min())
+      data = data.sum(axis=1)
+      df2[sector] = data
+
+  #Datos normalizados de cada industria/sector CACULA LA CORRELACION EN BASE A PRECIO
+
+  #Saco datos del MERVAL para poder calcular la correlacion.
+  df3=df.data[df.data.activo=='^MERV']['Close'].copy()
+  df3=df3.reset_index()
+  df3=df3.groupby(pd.Grouper(key="Date", freq="W-FRI")).last()
+
+
+  # NORMALIZO DATOS DEL MERVAL
+
+  df3=(df3-df3.min())/(df3.max()-df3.min())
+  df3=df3.rename(columns={'Close':'Indice'})
+
+  df2=pd.concat([df2,df3],axis=1)# UNIFICO
+
+  #RETORNOS IDEM ANTERIOR PERO CALCULADO EN RETORNOS
+
+  retorno=pd.DataFrame(index=df1.index,columns=df1.columns)
+
+  df1.fillna(method='ffill', inplace=True)
+
+  for i in df1.columns.get_level_values(1):#df1.columns.levels[1]
+    
+    retorno.loc[slice(None),(slice(None),i)]=(df1.loc[slice(None),(slice(None),i)]/df1.loc[slice(None),(slice(None),i)].shift(1))-1
+
+
+  df4 = pd.DataFrame()
+  for sector in retorno.columns.levels[0]:
+      data = ((retorno[sector]*1000) - (retorno[sector].min()*1000)) / ((retorno[sector].max()*1000) - (retorno[sector].min()*1000))
+      data = data.sum(axis=1)
+      df4[sector] = data
+
+  df3=df.data[df.data.activo=='^MERV']['Close']
+  df3=df3.reset_index()
+  df3=df3.groupby(pd.Grouper(key="Date", freq="W-FRI")).last()
+  df3=(df3/df3.shift(1))-1
+  df3=(df3-df3.min())/(df3.max()-df3.min())
+  #df3.name='Indice'
+  df3=df3.rename(columns={'Close':'Indice'})
+  df3.fillna(method='ffill', inplace=True)
+
+  retorno=pd.concat([df4,df3],axis=1)
+  retorno['Indice'].fillna(method='ffill', inplace=True)
+  df2['Indice'].fillna(method='ffill', inplace=True)
+
+
+
+  return df2,retorno
+
+def correlacion(df2,retorno,periodo=24):
+  #calculos y expresion de valores
+
+  act=retorno.rolling(periodo).corr()
+  pre=df2.rolling(periodo).corr()
+
+  corr=pd.DataFrame(index=pre.loc[(slice(None),'Indice'),slice(None)].mean().index)
+  corr['Corrmedia']=pre.loc[(slice(None),'Indice'),slice(None)].mean().values
+  corr['Tipo']=0
+
+  for i in corr.index:
+    if corr.loc[i]['Corrmedia']>=-1 and corr.loc[i]['Corrmedia']<=0:
+      corr.loc[i,'Tipo']='Inversa'
+    elif corr.loc[i]['Corrmedia']>0 and corr.loc[i]['Corrmedia']<=0.4:
+      corr.loc[i,'Tipo']='Nula/Poca'
+    elif corr.loc[i]['Corrmedia']>0.4 and corr.loc[i]['Corrmedia']<=0.6:
+      corr.loc[i,'Tipo']='Poca'
+    elif corr.loc[i]['Corrmedia']>0.6 and corr.loc[i]['Corrmedia']<=0.8:
+      corr.loc[i,'Tipo']='Alta'
+    elif corr.loc[i]['Corrmedia']>0.8 and corr.loc[i]['Corrmedia']<=1:
+      corr.loc[i,'Tipo']='Muy Alta'
+
+  corr=corr.join(pre.loc[(pre.index[-1],'Indice'),slice(None)].T.droplevel(0,axis=1),how='left')
+
+  corr.rename(columns={'Indice':'Corractual'},inplace=True)
+
+  return corr
+
 class screener():
 
   def __init__(self,tickers,inicio,fin):
