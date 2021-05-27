@@ -840,13 +840,19 @@ def screen_industrias(df):
 
   return resumen
 
-def screen_activos(df,industrias='',lideres='no',industrias_activas='si'):
+def screen_activos(df,industrias='',Activos='todos'):
+  '''
+  Activos: "mas activos" los que salen del los sectores mas activos
+  Activos: "lideres" merval lideres
+  Activos: "general" panel genral
+  Activos: "todos" todos los activos
+  '''
 
-  if industrias_activas=='si':
+  if Activos=='mas activos':
 
     listadoact=df.data[df.data['industria'].isin(industrias.index)].groupby(['Date','industria','activo']).sum()
 
-  elif lideres=='si':
+  elif Activos=='lideres':
 
     lideres=['ALUA','BBAR','BMA','BYMA','CEPU','COME','CRES','CVH','EDN','GGAL','HARG','LOMA','MIRG','PAMP','SUPV','TECO2','TGNO4','TGSU','TRAN','TXAR','VALO','YPF']
     for i in range(len(lideres)):
@@ -856,7 +862,8 @@ def screen_activos(df,industrias='',lideres='no',industrias_activas='si'):
     listadoact=listadoact.loc[slice(None),slice(None),lideres]# solo lideres  
 
   
-  else:
+  elif Activos=='general':
+
     listadoact=df.data.groupby(['Date','industria','activo']).sum()
 
     tickets=listadoact.index.get_level_values(2).unique().tolist()
@@ -869,6 +876,9 @@ def screen_activos(df,industrias='',lideres='no',industrias_activas='si'):
     #listadoact=df.data.groupby(['Date','industria','activo']).sum()
     listadoact=listadoact.loc[slice(None),slice(None),tickets]# solo lideres  
 
+  elif Activos=='todos':
+
+    listadoact=df.data.groupby(['Date','industria','activo']).sum()
 
 
   #PRIMERA PARTE
@@ -916,6 +926,8 @@ def screen_activos(df,industrias='',lideres='no',industrias_activas='si'):
   crec30=((data30/data30.shift(1))-1).replace([np.nan,np.inf,-np.inf],0).cumsum()
   mascrec30=crec30.iloc[-1].sort_values(ascending=False).head(10)
 
+
+
   crecacum=acummej.index
   crecacumprom=acumprommej.index
   crecconstante=mascrec60.loc[mascrec60.index.isin(mascrec30.index)].index
@@ -955,7 +967,7 @@ def screen_activos(df,industrias='',lideres='no',industrias_activas='si'):
 
   return resumen
 
-def preparar_corr(df):
+def preparar_corrind(df):
 
   df1=df.data.copy()
   df1.reset_index(inplace=True)
@@ -1020,8 +1032,71 @@ def preparar_corr(df):
 
 
   return df2,retorno
+def prep_corract(df):
+  df1=df.data.copy()
+  df1.reset_index(inplace=True)
+  #Agrupacion por semana INDUSTRIA / ACTIVO
+  df1=df1.groupby([pd.Grouper(key='Date', freq='W-FRI'),'activo'])['Close'].last()
+  # columnas LEVEL=0 son las industrias/LEVEL=1 son los activos
+  df1=df1.unstack(level=(1))
+  df1.fillna(method='ffill', inplace=True)
+  df2 = pd.DataFrame()
+  #normaliza entre 0 ~ 1 y suma los sectores/idustria para poder calcular la correlacion.
 
-def correlacion(df2,retorno,periodo=24):
+  for activo in df1.columns:
+      data = (df1[activo] - df1[activo].min()) / (df1[activo].max() - df1[activo].min())
+      df2[activo] = data
+
+  #Datos normalizados de cada industria/sector CACULA LA CORRELACION EN BASE A PRECIO
+  #Saco datos del MERVAL para poder calcular la correlacion.
+
+  df3=df.data[df.data.activo=='^MERV']['Close'].copy()
+  df3=df3.reset_index()
+  df3=df3.groupby(pd.Grouper(key="Date", freq="W-FRI")).last()
+
+
+  # NORMALIZO DATOS DEL MERVAL
+
+  df3=(df3-df3.min())/(df3.max()-df3.min())
+  df3=df3.rename(columns={'Close':'Indice'})
+
+  df2=pd.concat([df2,df3],axis=1)# UNIFICO
+
+
+  #RETORNOS IDEM ANTERIOR PERO CALCULADO EN RETORNOS
+
+  retorno=pd.DataFrame(index=df1.index,columns=df1.columns)
+
+  df1.fillna(method='ffill', inplace=True)
+
+  #for i in df1.columns:#df1.columns.levels[1]
+    
+  retorno=(df1/df1.shift(1))-1
+
+
+  df4 = pd.DataFrame()
+  for activo in retorno.columns:
+      data = ((retorno[activo]*1000) - (retorno[activo].min()*1000)) / ((retorno[activo].max()*1000) - (retorno[activo].min()*1000))
+      df4[activo] = data
+
+  df3=df.data[df.data.activo=='^MERV']['Close']
+  df3=df3.reset_index()
+  df3=df3.groupby(pd.Grouper(key="Date", freq="W-FRI")).last()
+  df3=(df3/df3.shift(1))-1
+  df3=(df3-df3.min())/(df3.max()-df3.min())
+  #df3.name='Indice'
+  df3=df3.rename(columns={'Close':'Indice'})
+  df3.fillna(method='ffill', inplace=True)
+
+  retorno=pd.concat([df4,df3],axis=1)
+
+
+  retorno['Indice'].fillna(method='ffill', inplace=True)
+  df2['Indice'].fillna(method='ffill', inplace=True)
+
+  return df2,retorno
+
+def corr_industrias(df2,retorno,periodo=24):
   #calculos y expresion de valores
 
   act=retorno.rolling(periodo).corr()
@@ -1046,6 +1121,33 @@ def correlacion(df2,retorno,periodo=24):
   corr=corr.join(pre.loc[(pre.index[-1],'Indice'),slice(None)].T.droplevel(0,axis=1),how='left')
 
   corr.rename(columns={'Indice':'Corractual'},inplace=True)
+
+  return corr
+
+def corr_activos(df2,retorno,periodo=24):
+  act=retorno.rolling(periodo).corr()
+  pre=df2.rolling(periodo).corr()
+
+  corr=pd.DataFrame(index=pre.loc[(slice(None),'Indice'),slice(None)].mean().index)
+  corr['CorrMedia']=pre.loc[(slice(None),'Indice'),slice(None)].mean().values
+
+  corr=corr.join(pre.loc[(pre.index[-1],'Indice'),slice(None)].T.droplevel(0,axis=1),how='left')
+
+  corr.rename(columns={'Indice':'Corractual'},inplace=True)
+
+  corr['Tipo']=0
+
+  for i in corr.index:
+    if corr.loc[i]['CorrMedia']>=-1 and corr.loc[i]['CorrMedia']<=0:
+      corr.loc[i,'Tipo']='Inversa'
+    elif corr.loc[i]['CorrMedia']>0 and corr.loc[i]['CorrMedia']<=0.4:
+      corr.loc[i,'Tipo']='Nula/Poca'
+    elif corr.loc[i]['CorrMedia']>0.4 and corr.loc[i]['CorrMedia']<=0.6:
+      corr.loc[i,'Tipo']='Poca'
+    elif corr.loc[i]['CorrMedia']>0.6 and corr.loc[i]['CorrMedia']<=0.8:
+      corr.loc[i,'Tipo']='Alta'
+    elif corr.loc[i]['CorrMedia']>0.8 and corr.loc[i]['CorrMedia']<=1:
+      corr.loc[i,'Tipo']='Muy Alta'
 
   return corr
 
