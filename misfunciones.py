@@ -1164,3 +1164,82 @@ class Volumen:
     self.industria=grupo_industria_volumen(data.data)
     self.sectores=grupo_sectores_volumen(data.data)
     self.activos=grupo_activo_volumen(data.data)
+    
+    
+ def beta(df,periodo=24):
+  '''
+  Calculo semanal.
+  El calculo se realiza en fracciones de medio año por eso 24 semanas.
+  DF es la matriz de retornos
+  '''
+
+  act=df.rolling(periodo).cov()
+  #pre=df2.rolling(periodo).corr()
+  info=pd.DataFrame(index=act.loc[(slice(None),'Indice'),slice(None)].mean().index) # Listado de todos los activos como indice.
+  info['CovMedia']=act.loc[(slice(None),'Indice'),slice(None)].mean().values
+
+  info=info.join(act.loc[(act.index[-1],'Indice'),slice(None)].T.droplevel(0,axis=1),how='left')
+
+  info.rename(columns={'Indice':'CovActual'},inplace=True)
+
+  sigmaindice=(df['Indice'].rolling(periodo).std())**2
+
+
+  beta=pd.DataFrame(np.zeros_like(act.loc[(slice(None),'Indice'),slice(None)]),columns=act.columns, index=sigmaindice.index)
+
+  for i in beta.columns:
+    beta.loc[:,i]=act.loc[(slice(None),'Indice'),i].values/sigmaindice.values
+  beta
+
+  info['BetaActual']=beta.iloc[-1]
+  info['BetaMedia']=beta.mean()
+
+
+  info['Tipo']=0
+
+  for i in info.index:
+    if info.loc[i]['BetaMedia']>=-1 and info.loc[i]['BetaMedia']<=0:
+      info.loc[i,'Tipo']='Inversa'
+    elif info.loc[i]['BetaMedia']>0 and info.loc[i]['BetaMedia']<=0.8:
+      info.loc[i,'Tipo']='Defensiva'
+    elif info.loc[i]['BetaMedia']>0.8 and info.loc[i]['BetaMedia']<=1.01:
+      info.loc[i,'Tipo']='Agresiva'
+    elif info.loc[i]['BetaMedia']>1.01:
+      info.loc[i,'Tipo']='Muy Agresiva'
+
+  return info.iloc[:,-3:]
+
+def comportamiento_activos(df,periodo=24,Activos='todos'):
+  '''
+  Funcion que trae como resultado aquellos activos que tuvieron volumen en XXX periodo y aquellos que vienen con tasa de crecimiento.
+  Ademas realiza resumen de sus correlaciones y betas.
+
+  Activos pude tener el valor:
+    'todos'= trae como resultado los principales activos
+    'mas activos'=trae como resultados los activos de las industrias con mas actvidad de volumen
+    'general'= realiza el filtro para los activos del panel general.
+    'lideres'=realiza el filtro para los activos del panel general.
+
+  '''
+
+  df2,retorno=prep_corract(df)
+  corr=corr_activos(df2,retorno,periodo=periodo)
+  resumen=screen_activos(df,Activos=Activos)
+  resumen=pd.concat([resumen,corr],axis=1,join='inner')
+  Beta=beta(retorno,periodo=periodo)
+  resumen=pd.concat([resumen,Beta],axis=1,join='inner')
+
+  return resumen
+
+def comportamiento_industrias(df,periodo=24):
+
+
+    df2,retorno=preparar_corrind(df)
+    corr=corr_industrias(df2,retorno,periodo=periodo)
+    filtro=screen_industrias(df)
+    filtro=pd.concat([filtro,corr],axis=1,join='inner')
+    resumen=filtro.iloc[:,:-1]
+    last=filtro.iloc[:,-1:]
+    resumen.insert(8,'CorrActaul',last)
+
+    return resumen
