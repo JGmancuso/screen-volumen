@@ -1166,7 +1166,7 @@ class Volumen:
     self.activos=grupo_activo_volumen(data.data)
     
     
- def beta(df,periodo=24):
+def beta(df,periodo=24):
   '''
   Calculo semanal.
   El calculo se realiza en fracciones de medio año por eso 24 semanas.
@@ -1207,7 +1207,7 @@ class Volumen:
     elif info.loc[i]['BetaMedia']>1.01:
       info.loc[i,'Tipo']='Muy Agresiva'
 
-  return info.iloc[:,-3:]
+    return info.iloc[:,-3:]
 
 def comportamiento_activos(df,periodo=24,Activos='todos'):
   '''
