@@ -1209,7 +1209,7 @@ def beta(df,periodo=24):
 
     return info.iloc[:,-3:]
 
-def comportamiento_activos(df,periodo=24,Activos='todos'):
+def comportamiento_activos(df,Activos='todos'):
   '''
   Funcion que trae como resultado aquellos activos que tuvieron volumen en XXX periodo y aquellos que vienen con tasa de crecimiento.
   Ademas realiza resumen de sus correlaciones y betas.
@@ -1221,12 +1221,9 @@ def comportamiento_activos(df,periodo=24,Activos='todos'):
     'lideres'=realiza el filtro para los activos del panel general.
 
   '''
-
-  df2,retorno=prep_corract(df)
-  corr=corr_activos(df2,retorno,periodo=periodo)
-  resumen=screen_activos(df,Activos=Activos)
+  #hasta aca el Corte
+  resumen=screen_activos(df,Activos=Activos) # esta funcion es la que aplica el filtro al tipo de activos.
   resumen=pd.concat([resumen,corr],axis=1,join='inner')
-  Beta=beta(retorno,periodo=periodo)
   resumen=pd.concat([resumen,Beta],axis=1,join='inner')
 
   return resumen
