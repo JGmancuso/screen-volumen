@@ -1226,7 +1226,8 @@ def comportamiento_activos(df,corr,Beta,Activos='todos'):
     'mas activos'=trae como resultados los activos de las industrias con mas actvidad de volumen
     'general'= realiza el filtro para los activos del panel general.
     'lideres'=realiza el filtro para los activos del panel general.
-
+  
+  Cargar matriz de analisis(df), matriz de correlaciones y de beta (corr y Beta).
   '''
   #hasta aca el Corte
   resumen=screen_activos(df,Activos=Activos) # esta funcion es la que aplica el filtro al tipo de activos.
