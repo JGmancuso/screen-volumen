@@ -1196,15 +1196,15 @@ def beta(df,periodo=24):
 
   info['Tipo_Beta']=0
 
-    for i in info.index:
-      if info.loc[i]['BetaMedia']>=-1 and info.loc[i]['BetaMedia']<=0:
-        info.loc[i,'Tipo_Beta']='Inversa'
-      elif info.loc[i]['BetaMedia']>0 and info.loc[i]['BetaMedia']<=0.8:
-        info.loc[i,'Tipo_Beta']='Defensiva'
-      elif info.loc[i]['BetaMedia']>0.8 and info.loc[i]['BetaMedia']<=1.01:
-        info.loc[i,'Tipo_Beta']='Agresiva'
-      elif info.loc[i]['BetaMedia']>1.01:
-        info.loc[i,'Tipo_Beta']='Muy Agresiva'
+  for i in info.index:
+    if info.loc[i]['BetaMedia']>=-1 and info.loc[i]['BetaMedia']<=0:
+      info.loc[i,'Tipo_Beta']='Inversa'
+    elif info.loc[i]['BetaMedia']>0 and info.loc[i]['BetaMedia']<=0.8:
+      info.loc[i,'Tipo_Beta']='Defensiva'
+    elif info.loc[i]['BetaMedia']>0.8 and info.loc[i]['BetaMedia']<=1.01:
+      info.loc[i,'Tipo_Beta']='Agresiva'
+    elif info.loc[i]['BetaMedia']>1.01:
+      info.loc[i,'Tipo_Beta']='Muy Agresiva'
 
   return info.iloc[:,-3:]
 
