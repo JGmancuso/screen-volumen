@@ -43,8 +43,12 @@ def getsymbol():
   BA='.BA'
   symbolo=[i.text+BA for i in tickers]
   symbolo.append('^MERV')
-
-  #a=symbolo.index('RICH.BA')
+  eliminar=['CARC.BA','RICH.BA']
+  for i in eliminar:
+    if i in symbol:
+      a=symbol.index(i)
+      symbol.pop(a) 
+    #a=symbolo.index('RICH.BA')
   #symbolo.pop(a) #13/03/2021 Rich no esta en la lista.
 
   a=symbolo.index('CARC.BA')
@@ -76,7 +80,11 @@ def ticker():
     symbolo=[i.text+BA for i in tickers]
     indx=symbolo.index('MERVAL.BA')
     symbolo[indx]='^MERV'
-
+    eliminar=['CARC.BA','RICH.BA']
+    for i in eliminar:
+      if i in symbol:
+        a=symbol.index(i)
+        symbol.pop(a) 
     #a=symbolo.index('RICH.BA')
     #symbolo.pop(a) #13/03/2021 Rich no esta en la lista.
 
