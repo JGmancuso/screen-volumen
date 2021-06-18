@@ -77,8 +77,8 @@ def ticker():
     indx=symbolo.index('MERVAL.BA')
     symbolo[indx]='^MERV'
 
-    a=symbolo.index('RICH.BA')
-    symbolo.pop(a) #13/03/2021 Rich no esta en la lista.
+    #a=symbolo.index('RICH.BA')
+    #symbolo.pop(a) #13/03/2021 Rich no esta en la lista.
 
     a=symbolo.index('CARC.BA')
     symbolo.pop(a)
