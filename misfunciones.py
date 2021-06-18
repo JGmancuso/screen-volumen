@@ -1216,7 +1216,7 @@ def beta(df,periodo=24):
 
   return info.iloc[:,-3:]
 
-def comportamiento_activos(df,Activos='todos'):
+def comportamiento_activos(df,corr,Beta,Activos='todos'):
   '''
   Funcion que trae como resultado aquellos activos que tuvieron volumen en XXX periodo y aquellos que vienen con tasa de crecimiento.
   Ademas realiza resumen de sus correlaciones y betas.
