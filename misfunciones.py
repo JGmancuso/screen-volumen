@@ -22,8 +22,16 @@ import os.path
 
 
 def getsymbol():
-  
-  import requests
+
+  df=pd.DataFrame()
+  info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
+  del info['Unnamed: 0']
+  symbolo=info.index.values
+
+  return symbolo
+
+
+def obtenersymb():
 
   lider='http://www.rava.com/empresas/mapa.php'
   # gral='http://www.rava.com/precios/panel.php?m=GEN'
@@ -43,16 +51,12 @@ def getsymbol():
   BA='.BA'
   symbolo=[i.text+BA for i in tickers]
   symbolo.append('^MERV')
-  eliminar=['CARC.BA','RICH.BA']
-  for i in eliminar:
-    if i in symbolo:
-      a=symbolo.index(i)
-      symbolo.pop(a) 
-    #a=symbolo.index('RICH.BA')
-  #symbolo.pop(a) #13/03/2021 Rich no esta en la lista.
 
-  #a=symbolo.index('CARC.BA')
-  #symbolo.pop(a)
+  a=symbolo.index('RICH.BA')
+  symbolo.pop(a) #13/03/2021 Rich no esta en la lista.
+
+  a=symbolo.index('CARC.BA')
+  symbolo.pop(a)
 
   return symbolo
 
