@@ -924,7 +924,7 @@ def screen_activos(df,industrias='',Activos='todos'):
 
   #SECTORES QUE MAS CRECIO en promedio ACUMULADO EN PROMEDIO
 
-  acumprommej=crecimiento[str(datetime.datetime.utcnow().year)].mean()
+  acumprommej=crecimiento.iloc[-240:].mean()
   acumprommej=acumprommej.sort_values(ascending=False).head(10)
 
   #SECTORES QUE MAS % entro en 60-30 dias
