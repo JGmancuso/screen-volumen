@@ -1388,3 +1388,130 @@ def screen_activos_historico(df,vlargo=30,vcorto=15):
 
   return df5
   
+def datosdrawdown(activo):
+
+  sd = '2016-06-10'
+  ed = datetime.datetime.utcnow()
+  Tickets=[activo]
+  df=yf.download(tickers=Tickets,start=sd,end=ed)
+  df['Ret']=(df.Close/df.Close.shift())-1
+  df['Max']=df.Close.cummax()
+  df['drawdownabs']=df.Close-df.Close.cummax()
+  df['drawdown']=(df.drawdownabs/df.Close.cummax())
+  df['drawdown']=df['drawdown']*(100)
+  recoveryfact=df.Close.iloc[-1]/-df.drawdownabs.min()# esta bien?
+
+  df['dd_start']=pd.NaT
+  df['_date']=df.index
+  df.dd_start=df.dd_start.mask(df.drawdown==0,0) #completa en la comlumna dd-start con 0 cuando drawdown es igual a 0
+  df.dd_start=df.dd_start.mask((df.drawdown<0)&(df.drawdown.shift()==0),df._date) #pone fecha de inicio, cuando drawdown es negativo y el anterior fue positivo.
+  df.dd_start=pd.to_datetime(df.dd_start) # pone en formato fecha.
+  df.dd_start.ffill(inplace=True)# rellena los valores NaT con el de la fecha de incio del drawdown.
+  df.dd_start=df.dd_start.mask(df.drawdown==0,np.nan) # cuando drawdown es = a 0 compleca con nan
+  df['dd_duration']=df.groupby('dd_start').dd_start.cumcount()+1 # crea colmna de duracion grupa por fecha y suma el acumulado de conteo. 
+  df.dd_duration=df.dd_duration.mask(df.drawdown==0,0)#  en la columan dd_duration cuando drawdown es 0 se pide que cargue 0, de manera que no acumule conteo.
+  df.drop('_date',axis=1,inplace=True) # eliminamos fecha.
+  df['dd_total_dur']=df.groupby('dd_start').dd_duration.transform('max').fillna(0).astype(int) # nose que hace.
+  df['dd-until_end']=df.dd_total_dur-df.dd_duration+1 #calcula cuantos dias falta para finalizar el drawdown
+
+  return df
+
+def analisisdraw(df,umbral=15,grafico='no'):
+
+  '''
+  Umbral: es la cantidad de dias para atras y para adelante que se considera para correcion y caida.
+
+  caida se considera correcion de menor duracion.
+  '''
+  
+  dd_groups=df.groupby('dd_start')# no se que hace es un filtro.
+  drawdowns=df.loc[dd_groups.drawdown.idxmin()]
+  #resumen de interpretacion.
+  #Ej ATK- Así comprobamos que su mayor drawdown fue de 31.26% (drawdownabs maximo valor)el día 18-03-2020, 
+  #que ese drawdown se inició el 14-02-2020, en su peor momento duraba 23 días(23 dias para llegar a su mini valor-dd_duration para el maximo valor abs),
+  #que tuvo una duración total de 208 días(total duraion drawdowns-dd_total_duration para el mayor drwadown), y que por tanto desde su mínimo necesito todavía 186 días (dd-until_end de maximodrawdown) para recuperar el nivel previo.
+
+  datos=drawdowns.mask(drawdowns.dd_total_dur<umbral)['drawdown'].describe().to_frame()
+  datos.rename(columns={'drawdown':'Correcion_porc'},inplace=True)
+  datos['Caidas_porc']=drawdowns.mask(drawdowns.dd_total_dur>umbral)['drawdown'].describe().to_frame()
+  datos['Dias_min_corr']=drawdowns.mask(drawdowns.dd_total_dur<umbral)['dd_duration'].describe().to_frame()
+  datos['Dias_min_caida']=drawdowns.mask(drawdowns.dd_total_dur>umbral)['dd_duration'].describe().to_frame()
+  datos['Dias_tot_corr']=drawdowns.mask(drawdowns.dd_total_dur<umbral)['dd_total_dur'].describe().to_frame()
+  datos['Dias_tot_caida']=drawdowns.mask(drawdowns.dd_total_dur>umbral)['dd_total_dur'].describe().to_frame()
+  datos['Dias_rec_corr']=drawdowns.mask(drawdowns.dd_total_dur<umbral)['dd-until_end'].describe().to_frame()
+  datos['Dias_rec_caida']=drawdowns.mask(drawdowns.dd_total_dur>umbral)['dd-until_end'].describe().to_frame()
+  
+  maximacaida=datos.loc['min','Correcion_porc']
+  fechamaxcaida=drawdowns[drawdowns['drawdown']==maximacaida]['dd_start'].values[0]
+  picodura=drawdowns[drawdowns['drawdown']==maximacaida]['dd_duration'].values[0]
+  maxdura=drawdowns[drawdowns['drawdown']==maximacaida]['dd_total_dur'].values[0]
+  recup=drawdowns[drawdowns['drawdown']==maximacaida]['dd-until_end'].values[0]
+
+  if grafico=='si':
+    
+    sns.set_theme(style="darkgrid")
+
+    plt.figure(figsize=(10,10))
+    ax=sns.lineplot(data=df, x=df.index, y='Close')
+
+    ax.fill_between(df.index,df.Close, df.Max,where=(df.dd_total_dur>15),color='r')
+    labels = [f"{stat}: {val:.2f}" for stat, val in datos.loc['mean'].items()]
+    handles = [plt.Line2D([], [], visible=False) for _ in labels]
+    
+
+    ax.legend(
+      handles,
+      labels,
+      loc="best",
+      handlelength=0,
+      title='Valores Medios'
+      )
+
+
+
+  return display(datos),print('\n',      
+              'La mayor perdida porcentaul en un ciclo de caida (drawdown) fue de {} %.'.format(round(maximacaida,2)),'Esa caida se inició el {}, hasta su peor momento duro {} días,'.format(pd.to_datetime(str(fechamaxcaida)).strftime('%d-%m-%Y'),picodura),
+              'de un total de {} días,\n'.format(maxdura),
+              '\n',
+              'Desde su mínimo necesito {} días para recuperar el nivel previo.'.format(recup),
+              '\n','\n',
+              'ESTADISTICAS (para correciones totales de mas de 15 dias)\n',
+              '--------------------------------------------------------\n',
+              'Media porcentual de caidas en una correccion de largo plazo:','{} %'.format(round(datos.loc['mean','Correcion_porc'],2)),'\n',
+              'En promedio tardo {} dias para llegar al minimo en un correcion de largo plazo '.format(round(datos.loc['mean','Dias_min_corr'],0)),'\n',
+              'En promedio las correciones de Largo Plazo duraron un total de {} días'.format(round(datos.loc['mean','Dias_tot_corr'],0)),'\n',
+              )
+
+
+def analisisretorno(df,detalle='no'):
+
+  media=df['Ret'].mean()
+  sigma=df['Ret'].std()
+  limsup=media+sigma
+  liminf=media-sigma
+
+  statd=df[df.Ret>=limsup]['Ret'].describe().to_frame()
+  statd['Ret inf']=df[df.Ret<=liminf]['Ret'].describe().to_frame()
+  statd['Ret_norm']=df['Ret'].describe().to_frame()
+
+  semanal=(df['Ret']+1).resample('W').prod()-1
+  mediasem=semanal.mean()
+  sigmasem=semanal.std()
+  limsupsem=mediasem+sigmasem
+  liminfsem=mediasem-sigmasem
+
+  statsem=semanal[semanal>=limsupsem].describe().to_frame()
+  statsem['Ret inf']=semanal[semanal<=liminfsem].describe().to_frame()
+  statsem['Ret_norm']=semanal.describe().to_frame()
+
+  if detalle=='si':
+
+    print('\n','Diariamente la firma tuvo un retorno medio de {} % con una desviacion de +/- {} %'.format(round(statd.loc['mean','Ret_norm']*100,2),round(statd.loc['std','Ret_norm']*100,2)),'\n',
+          'En su limite superior(media + una desviacion) la normalidad de los retornos fue de {} % con una desviacion de +/- {} % '.format(round(statd.loc['mean','Ret']*100,2),round(statd.loc['std','Ret']*100,2)),'\n',
+          'En su limite inferior(media - una desviacion) la normalidad de los retornos fue de {} % con una desviacion de +/- {} % '.format(round(statd.loc['mean','Ret inf']*100,2),round(statd.loc['std','Ret inf']*100,2)),'\n','\n',
+          'Semanalmente la firma tuvo un retorno medio de {} % con una desviacion de +/- {} % '.format(round(statsem.loc['mean','Ret_norm']*100,2),round(statsem.loc['std','Ret_norm']*100,2)),'\n',
+          'En su limite superior(media + una desviacion) la normalidad de los retornos fue de {} % con una desviacion de +/- {} % '.format(round(statsem.loc['mean','Ret']*100,2),round(statsem.loc['std','Ret']*100,2)),'\n',
+          'En su limite inferior(media - una desviacion) la normalidad de los retornos fue de {} % con una desviacion de +/- {} % '.format(round(statsem.loc['mean','Ret inf']*100,2),round(statsem.loc['std','Ret inf']*100,2)),'\n',
+    )
+  
+  return statd,statsem
