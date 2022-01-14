@@ -20,6 +20,7 @@ from datetime import datetime
 import datetime
 import os.path
 import yfinance as yf
+import seaborn as sns
 
 
 def getsymbol():
