@@ -142,62 +142,111 @@ def matriztrabajo(tickers,start,end):
   
   import yfinance as yf
   
+  '''
+  Activos='externos' cuando la base es sobre activos especificos.
+  Si no dejar en blanco o colocar no se actovos= 'locales'
+
+  '''
+
   sd = start
   ed = end
   tickers= tickers# funcion que determine los ticker automaticamente
-  #df = yf.download(tickers=tickers, start=sd, end=ed)
+ 
   df=pd.DataFrame()
-  info=pd.read_csv("/content/drive/MyDrive/Colab Notebooks/activosector.csv",index_col='activo')#hola
-  del info['Unnamed: 0']
-
-  if len(tickers)>len(info.index):
-    ''
-  else:
-    tickers=info.index
   
+  if activos!='externos':
 
-  for i in tickers:
-   
-    df1=yf.download(tickers=i, start=sd, end=ed)
-    df1['activo']=i
-    
-    if i=='^MERV':
+    info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
+    del info['Unnamed: 0']
+
+    if len(tickers)>len(info.index):
       ''
     else:
-      try:
+      tickers=info.index
     
-        df1['sector']=info.loc[i]['sector']  
-        df1['industria']=info.loc[i]['industria']
+
+    for i in tickers:
+    
+      df1=yf.download(tickers=i, start=sd, end=ed)
+      df1['activo']=i
+      
+      if i=='^MERV':
+        ''
+      else:
+        try:
+      
+          df1['sector']=info.loc[i]['sector']  
+          df1['industria']=info.loc[i]['industria']
+        
+        except KeyError:
+
+          df1['sector']='NN' 
+          df1['industria']='NN'
+
+      df1.reset_index(inplace=True)
+
+      volumen=df1['Volume']
+      
+      df1['Vol_50']=volumen.rolling(window=50).sum()
+      #Ultimos 30 dias.
+      df1['Vol_30']=volumen.rolling(window=30).sum()
+      #Ultimos 10 dias.
+      df1['Vol_10']=volumen.rolling(window=10).sum()
+      #Calcular media de Vol de 50
+      df1['Volmed_50']=volumen.rolling(window=50).mean()
+      #,30 
+      df1['Volmed_30']=volumen.rolling(window=30).mean()
+      #y 10 dias.
+      df1['Volmed_10']=volumen.rolling(window=10).mean()
+      #VAR
+      df1['Volvsmed50']=round(((df1['Volume']/df1['Volmed_50'])-1)*100,2)
+      df1['Volvsmed30']=round(((df1['Volume']/df1['Volmed_30'])-1)*100,2)
+      df1['Volvsmed10']=round(((df1['Volume']/df1['Volmed_10'])-1)*100,2)
+      df1['V10vs50']=round(((df1['Volmed_10']/df1['Volmed_50'])-1)*100,2)
+      df1['V30vs50']=round(((df1['Volmed_30']/df1['Volmed_50'])-1)*100,2)
+
+      df=pd.concat([df,df1],ignore_index=True)
+    
+  else:
+    
+    for i in tickers:
+
+      df1=yf.download(tickers=i, start=sd, end=ed)
+      df1['activo']=i
+
+      try:
+
+        df1['sector']=yf.Ticker(i).info['sector']
+        df1['industria']=yf.Ticker(i).info['industry']
       
       except KeyError:
 
         df1['sector']='NN' 
         df1['industria']='NN'
-    
 
-    df1.reset_index(inplace=True)
+      df1.reset_index(inplace=True)
 
-    volumen=df1['Volume']
-    
-    df1['Vol_50']=volumen.rolling(window=50).sum()
-    #Ultimos 30 dias.
-    df1['Vol_30']=volumen.rolling(window=30).sum()
-    #Ultimos 10 dias.
-    df1['Vol_10']=volumen.rolling(window=10).sum()
-    #Calcular media de Vol de 50
-    df1['Volmed_50']=volumen.rolling(window=50).mean()
-    #,30 
-    df1['Volmed_30']=volumen.rolling(window=30).mean()
-    #y 10 dias.
-    df1['Volmed_10']=volumen.rolling(window=10).mean()
-    #VAR
-    df1['Volvsmed50']=round(((df1['Volume']/df1['Volmed_50'])-1)*100,2)
-    df1['Volvsmed30']=round(((df1['Volume']/df1['Volmed_30'])-1)*100,2)
-    df1['Volvsmed10']=round(((df1['Volume']/df1['Volmed_10'])-1)*100,2)
-    df1['V10vs50']=round(((df1['Volmed_10']/df1['Volmed_50'])-1)*100,2)
-    df1['V30vs50']=round(((df1['Volmed_30']/df1['Volmed_50'])-1)*100,2)
+      volumen=df1['Volume']
+      
+      df1['Vol_50']=volumen.rolling(window=50).sum()
+      #Ultimos 30 dias.
+      df1['Vol_30']=volumen.rolling(window=30).sum()
+      #Ultimos 10 dias.
+      df1['Vol_10']=volumen.rolling(window=10).sum()
+      #Calcular media de Vol de 50
+      df1['Volmed_50']=volumen.rolling(window=50).mean()
+      #,30 
+      df1['Volmed_30']=volumen.rolling(window=30).mean()
+      #y 10 dias.
+      df1['Volmed_10']=volumen.rolling(window=10).mean()
+      #VAR
+      df1['Volvsmed50']=round(((df1['Volume']/df1['Volmed_50'])-1)*100,2)
+      df1['Volvsmed30']=round(((df1['Volume']/df1['Volmed_30'])-1)*100,2)
+      df1['Volvsmed10']=round(((df1['Volume']/df1['Volmed_10'])-1)*100,2)
+      df1['V10vs50']=round(((df1['Volmed_10']/df1['Volmed_50'])-1)*100,2)
+      df1['V30vs50']=round(((df1['Volmed_30']/df1['Volmed_50'])-1)*100,2)
 
-    df=pd.concat([df,df1],ignore_index=True)
+      df=pd.concat([df,df1],ignore_index=True)
 
   return df
   
@@ -1165,13 +1214,13 @@ def corr_activos(df2,retorno,periodo=24):
 
 class screener():
 
-  def __init__(self,tickers,inicio,fin):
+  def __init__(self,tickers,inicio,fin,seleccion):
 
-    self.data=matriztrabajo(tickers,inicio,fin)
+    self.data=matriztrabajo(tickers,inicio,fin,activos=seleccion)
 
 class Volumen:
-  def __init__(self,tickers,inicio,fin):
-    data=screener(tickers,inicio,fin)
+  def __init__(self,tickers,inicio,fin,seleccion):
+    data=screener(tickers,inicio,fin,seleccion)
     self.data=data.data.set_index(data.data.Date).drop(['Date'],axis=1)
     self.industria=grupo_industria_volumen(data.data)
     self.sectores=grupo_sectores_volumen(data.data)
