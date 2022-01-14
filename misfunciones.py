@@ -1301,3 +1301,90 @@ def comportamiento_industrias(df,periodo=24):
     resumen.insert(8,'CorrActaul',last)
 
     return resumen
+  
+def plot_movinichist(df,sd,ed,activo,alto=10,ancho=10):
+
+  df1=df.copy()
+  df2=df1.loc[(slice(sd,ed),activo),:].copy()
+
+
+  mask = df2['movinicfuert']> 0 #filtro para multiindex dataframe.
+  idx = pd.IndexSlice
+  # Puntos para indicar en el grafico cuando hubo mov indi
+  a=df2.loc[idx[mask,activo],'Close'].index.get_level_values(0) # puntos eje de las X
+  b=df2.loc[idx[mask,activo],'Close'] # eje de las Y
+
+  fig, (ax1, ax2, ax3) = plt.subplots(3, 1, gridspec_kw={'height_ratios': [3, 1, 1]}) # height nos muestra la proporcion de la grafica 3.1.1 relacion de 3 en el primer grafico y uno en los sig.
+  fig.set_size_inches(20,10)
+
+  ax1.plot(df1.loc[(slice(sd,ed),activo),['Close']].index.get_level_values(0),
+              df1.loc[(slice(sd,ed),activo),['Close']],
+              a,
+              b,'v')
+
+  ax1.fill_between(df2.index.get_level_values(0),df1.loc[(slice(sd,ed),activo),:]['Close'].values,0,where=(df2.cumhist>0),color='lightsteelblue')# relleno para identificar crecimiento acumulado.
+
+  ax2.plot(df1.loc[(slice(sd,ed),activo),['movinic']].index.get_level_values(0),
+              df1.loc[(slice(sd,ed),activo),['movinic']])
+
+  ax3.plot(df1.loc[(slice(sd,ed),activo),['movinicfuert']].index.get_level_values(0),
+              df1.loc[(slice(sd,ed),activo),['movinicfuert']])
+
+
+def screen_activos_historico(df,vlargo=30,vcorto=15):
+
+  listadoact=df.data.groupby(['Date','industria','activo']).sum()
+
+  #PRIMERA PARTE
+  base=actividad_inusual(listadoact)
+  base=base.reindex().groupby(['Date','activo']).sum()
+  #normalizar?? No por que no tiene nada que ver que tenga mas activos y por ende no va a tener mas actividad inusual.
+  inusual=actividad_inusual(base.copy())
+  cuenta=conteo(inusual)
+
+  lookback=[90,60,30,15] # ventas tempoarales 90 dias, 60...etc.
+  df5=inusual.copy()
+  
+  # matriz base con conteos inusuales por ventana temporal.
+
+
+  for i in lookback:
+
+    df5['cuminu{}'.format(i)]=inusual.groupby(level=-1)['inusual'].apply(lambda x: x.rolling(window=i).sum()) # suma acumulada en groupby, se identifica el nivel con el rolleo de cada periodo.
+  
+
+  # sacar conteos de 30-15
+  df5['intervalo 30-15']=df5['cuminu30']-df5['cuminu15']
+
+
+  # Movimiento inusual activos que tuvieron actividad inusual ultimos 15 dias y que tuvieron en los 30-15 dias.
+
+  df5['movinic']=np.where((df5['intervalo 30-15']>0)&(df5['cuminu15']>0),1,0)
+
+  datalong=inusual['V10vs50'].iloc[vlargo:].copy()
+  datashort=inusual['V10vs50'].iloc[vcorto:].copy()
+
+  #Porcentaje
+
+  df5['%long']=datalong.groupby(level=-1).apply(lambda x: x.diff()/x.shift().abs())
+  df5['%short']=datashort.groupby(level=-1).apply(lambda x: x.diff()/x.shift().abs())
+
+  #cumsum historico
+
+  cumhist=inusual.groupby(level=-1)['V10vs50'].pct_change()
+  cumhist.replace([np.inf, -np.inf], np.nan,inplace=True) 
+  df5['cumhist']=cumhist.groupby(level=-1).apply(lambda x: round((x+1).cumprod(),2))
+
+  #CUM
+  #LARGO
+  df5['cumlargo']=df5.groupby(level=-1)['cumhist'].apply(lambda x: x.rolling(window=vlargo).sum())
+  #CORTO
+  df5['cumcorto']=df5.groupby(level=-1)['cumhist'].apply(lambda x: x.rolling(window=vcorto).sum())
+
+
+
+  df5['movinicfuert']=np.where((df5['movinic']>0)&(df5['cumcorto']>0),1,0)
+  
+
+  return df5
+  
