@@ -1218,7 +1218,7 @@ class screener():
 
     self.data=matriztrabajo(tickers,inicio,fin,activos=seleccion)
 
-class Volumen:
+class Volumen():
   def __init__(self,tickers,inicio,fin,seleccion):
     data=screener(tickers,inicio,fin,seleccion)
     self.data=data.data.set_index(data.data.Date).drop(['Date'],axis=1)
