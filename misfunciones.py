@@ -19,6 +19,7 @@ from datetime import datetime
 #import ta
 import datetime
 import os.path
+import yfinance as yf
 
 
 def getsymbol():
@@ -1389,6 +1390,8 @@ def screen_activos_historico(df,vlargo=30,vcorto=15):
   return df5
   
 def datosdrawdown(activo):
+  
+  import yfinance as yf
 
   sd = '2016-06-10'
   ed = datetime.datetime.utcnow()
