@@ -1320,17 +1320,21 @@ def plot_movinichist(df,sd,ed,activo,alto=10,ancho=10):
   fig.set_size_inches(20,10)
 
   ax1.plot(df1.loc[(slice(sd,ed),activo),['Close']].index.get_level_values(0),
-              df1.loc[(slice(sd,ed),activo),['Close']],
-              a,
-              b,'v')
+           df1.loc[(slice(sd,ed),activo),['Close']])
 
-  ax1.fill_between(df2.index.get_level_values(0),df1.loc[(slice(sd,ed),activo),:]['Close'].values,0,where=(df2.cumhist>0),color='lightsteelblue')# relleno para identificar crecimiento acumulado.
+  ax1.fill_between(df2.index.get_level_values(0),df1.loc[(slice(sd,ed),activo),:]['Close'].values,0,where=(df2.cumhist>0),color='lightsteelblue', label=['Crecimiento Acum'])# relleno para identificar crecimiento acumulado.
+
+  ax1.plot( ejex,ejey,'v', color='orange')
+
+  ax1.legend( ['Precio','Movimiento inicial fuerte','Crecimento Volumen Acumulado'],loc=0)
 
   ax2.plot(df1.loc[(slice(sd,ed),activo),['movinic']].index.get_level_values(0),
-              df1.loc[(slice(sd,ed),activo),['movinic']])
+             df1.loc[(slice(sd,ed),activo),['movinic']])
+  ax2.title.set_text('Moviminto inicial')
 
   ax3.plot(df1.loc[(slice(sd,ed),activo),['movinicfuert']].index.get_level_values(0),
-              df1.loc[(slice(sd,ed),activo),['movinicfuert']])
+                          df1.loc[(slice(sd,ed),activo),['movinicfuert']])
+  ax3.title.set_text('Moviminto inicial Fuerte')
 
 
 def screen_activos_historico(df,vlargo=30,vcorto=15):
