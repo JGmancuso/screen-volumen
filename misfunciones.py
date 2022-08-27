@@ -1313,8 +1313,8 @@ def plot_movinichist(df,sd,ed,activo,alto=10,ancho=10):
   mask = df2['movinicfuert']> 0 #filtro para multiindex dataframe.
   idx = pd.IndexSlice
   # Puntos para indicar en el grafico cuando hubo mov indi
-  a=df2.loc[idx[mask,activo],'Close'].index.get_level_values(0) # puntos eje de las X
-  b=df2.loc[idx[mask,activo],'Close'] # eje de las Y
+  ejex=df2.loc[idx[mask,activo],'Close'].index.get_level_values(0) # puntos eje de las X
+  ejey=df2.loc[idx[mask,activo],'Close'] # eje de las Y
 
   fig, (ax1, ax2, ax3) = plt.subplots(3, 1, gridspec_kw={'height_ratios': [3, 1, 1]}) # height nos muestra la proporcion de la grafica 3.1.1 relacion de 3 en el primer grafico y uno en los sig.
   fig.set_size_inches(20,10)
