@@ -24,17 +24,20 @@ import seaborn as sns
 
 
 def getsymbol():
-
+  
   info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
   del info['Unnamed: 0']
 
+  info=info.index.to_numpy()
+  info=info.tolist()
+  
   Borrar=['BRIO.BA','DOME.BA','DYCA.BA','GARO.BA','TGLT.BA','IRCP.BA','PGR.BA','^MERV']
   info.append('M.BA')
 
   for i in Borrar:
-    tickers.remove(i)
+    info.remove(i)
 
-  return info.tolist()
+  return info
 
 
 def obtenersymb():
