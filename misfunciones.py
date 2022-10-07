@@ -592,14 +592,6 @@ def base1m(lista='',nombre='',guardar='si'):
   tickers= getsymbol()# funcion que determine los ticker automaticamente
   #df = yf.download(tickers=tickers, start=sd, end=ed)
 
-  info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
-  del info['Unnamed: 0']
-
-  if len(tickers)>len(info.index):
-    ''
-  else:
-    tickers=info.index
-
 
   df=pd.DataFrame()
   
@@ -643,15 +635,7 @@ def base5m(lista='',nombre='',guardar='si'):
   tickers= getsymbol()# funcion que determine los ticker automaticamente
   #df = yf.download(tickers=tickers, start=sd, end=ed)
 
-  info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
-  del info['Unnamed: 0']
-
-  if len(tickers)>len(info.index):
-    ''
-  else:
-    tickers=info.index
-
-
+ 
   df=pd.DataFrame()
   if lista=='':
 
@@ -691,14 +675,6 @@ def base15m(lista='',nombre='',guardar='si'):
 
   tickers= getsymbol()# funcion que determine los ticker automaticamente
   #df = yf.download(tickers=tickers, start=sd, end=ed)
-
-  info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
-  del info['Unnamed: 0']
-
-  if len(tickers)>len(info.index):
-    ''
-  else:
-    tickers=info.index
 
 
   df=pd.DataFrame()
@@ -741,13 +717,6 @@ def base30m(lista='',nombre='',guardar='si'):
   tickers= getsymbol()# funcion que determine los ticker automaticamente
   #df = yf.download(tickers=tickers, start=sd, end=ed)
 
-  info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
-  del info['Unnamed: 0']
-
-  if len(tickers)>len(info.index):
-    ''
-  else:
-    tickers=info.index
 
 
   df=pd.DataFrame()
@@ -789,15 +758,6 @@ def base1h(lista='',nombre='',guardar='si'):
 
   tickers= getsymbol()# funcion que determine los ticker automaticamente
   #df = yf.download(tickers=tickers, start=sd, end=ed)
-
-  info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
-  del info['Unnamed: 0']
-
-  if len(tickers)>len(info.index):
-    ''
-  else:
-    tickers=info.index
-
 
   df=pd.DataFrame()
   if lista=='':
