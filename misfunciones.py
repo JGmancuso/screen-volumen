@@ -1238,7 +1238,7 @@ def beta(df,periodo=24):
 
   return info.iloc[:,-3:]
 
-def comportamiento_activos(df,corr,Beta,Activos='todos'):
+def comportamiento_activos(df,corr,Beta,RS,Activos='todos'):
   '''
   Funcion que trae como resultado aquellos activos que tuvieron volumen en XXX periodo y aquellos que vienen con tasa de crecimiento.
   Ademas realiza resumen de sus correlaciones y betas.
@@ -1255,6 +1255,8 @@ def comportamiento_activos(df,corr,Beta,Activos='todos'):
   resumen=screen_activos(df,Activos=Activos) # esta funcion es la que aplica el filtro al tipo de activos.
   resumen=pd.concat([resumen,corr],axis=1,join='inner')
   resumen=pd.concat([resumen,Beta],axis=1,join='inner')
+  resumen=pd.concat([resumen,RS],axis=1,join='inner')
+  resumen.sort_values('DIF_RS_media',ascending=False)
 
   return resumen
 
@@ -1490,3 +1492,35 @@ def analisisretorno(df,detalle='no'):
     )
   
   return statd,statsem
+
+def RS(df,benchmark,media=36):
+  '''
+  Benchmark: colocar el nombre del activo con el que se compara, ej: merval ^MERV; ser un activo GGAL==> GGAL.BA
+  Media: detallar el valor de media que se quiere trabajar para RS, defecto 36
+
+  Posiblemente la ultima fecha no salga como consecuencia de que el indice no siempre tiene hasta la fecha actual cargado el valor.
+  Por lo que la formula generalmente otorga resultado con el valor relative strengh del dia anterior.
+
+  '''
+  objetivo=benchmark
+
+  #lista_act=activo.columns.unique().to_list()
+  #lista_act.remove('^MERV')
+  
+  #Preparar base para calculos
+  indice=df.data[df.data['activo']==objetivo]['Close'] # contra que se compara cada activo
+  activo=df.data.groupby(['Date','activo'])['Close'].sum().unstack('activo')
+  activo.drop('^MERV',axis=1,inplace=True)
+  
+  #Calculo
+  RS=activo.T/indice*1000
+  RS=RS.T
+  RS=RS.stack()
+  RS.name='RS'
+
+  #DataFrame
+  RS=pd.DataFrame(RS)
+  RS['RS_medio_%s'%(media)]=RS.groupby(level=-1).apply(lambda x: x.rolling(media).mean())
+  RS['DIF_RS_media']=((RS['RS']/RS['RS_medio_%s'%(media)])-1)*100
+
+  return (RS)
