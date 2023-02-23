@@ -1256,7 +1256,7 @@ def comportamiento_activos(df,corr,Beta,RS,Activos='todos'):
   resumen=pd.concat([resumen,corr],axis=1,join='inner')
   resumen=pd.concat([resumen,Beta],axis=1,join='inner')
   resumen=pd.concat([resumen,RS],axis=1,join='inner')
-  resumen.sort_values('DIF_RS_media',ascending=False)
+  resumen=resumen.sort_values('DIF_RS_media',ascending=False)
 
   return resumen
 
