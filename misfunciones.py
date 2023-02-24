@@ -1523,4 +1523,11 @@ def RS(df,benchmark,media=36):
   RS['RS_medio_%s'%(media)]=RS.groupby(level=-1).apply(lambda x: x.rolling(media).mean())
   RS['DIF_RS_media']=((RS['RS']/RS['RS_medio_%s'%(media)])-1)*100
 
+  RS['DIF_RS_media']=((RS['RS']/RS['RS_medio_%s'%(media)])-1)*100
+  RS['pos_DS']=RS.groupby(level=-1)['DIF_RS_media'].apply(lambda x: x.rolling(media).std()*2)
+  RS['neg_DS']=RS.groupby(level=-1)['DIF_RS_media'].apply(lambda x: x.rolling(media).std()*-2)
+  RS['pos_DS*media']=RS['pos_DS']*RS['DIF_RS_media']
+  RS['neg_DS*media']=RS['neg_DS']*RS['DIF_RS_media']
+
   return (RS)
+
