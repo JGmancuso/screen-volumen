@@ -889,7 +889,7 @@ def screen_activos(df,industrias='',Activos='todos'):
       lideres[i]+=".BA"
 
     listadoact=df.data.groupby(['Date','industria','activo']).sum(numeric_only=True)
-    listadoact=listadoact.loc[slice(None),slice(None),lideres]# solo lideres  
+    listadoact=listadoact[listadoact.index.isin(lideres,level='activo')]# solo lideres  
 
 
   elif Activos=='general':
@@ -904,7 +904,7 @@ def screen_activos(df,industrias='',Activos='todos'):
       tickets.pop(tickets.index(i))
 
     #listadoact=df.data.groupby(['Date','industria','activo']).sum()
-    listadoact=listadoact.loc[slice(None),slice(None),tickets]# solo generales  
+    listadoact=listadoact[listadoact.index.isin(tickets,level='activo')]# solo generales  
 
   elif Activos=='todos':
 
@@ -993,7 +993,7 @@ def screen_activos(df,industrias='',Activos='todos'):
     if i in crecconstante:
       resumen.loc[i,'Crec_Const']='X'
 
-    return resumen
+  return resumen
 
 def preparar_corrind(df):
 
