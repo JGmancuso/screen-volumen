@@ -1257,7 +1257,7 @@ def screen_activos_historico(df,vlargo=30,vcorto=15):
 
   for i in lookback:
 
-    df5['cuminu{}'.format(i)]=inusual.groupby(level=-1)['inusual'].apply(lambda x: x.rolling(window=i).sum(group_keys=False)) # suma acumulada en groupby, se identifica el nivel con el rolleo de cada periodo.
+    df5['cuminu{}'.format(i)]=inusual.groupby(level=-1,group_keys=False)['inusual'].apply(lambda x: x.rolling(window=i).sum()) # suma acumulada en groupby, se identifica el nivel con el rolleo de cada periodo.
   
 
   # sacar conteos de 30-15
