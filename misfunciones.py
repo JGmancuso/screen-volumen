@@ -1273,20 +1273,20 @@ def screen_activos_historico(df,vlargo=30,vcorto=15):
 
   #Porcentaje
 
-  df5['%long']=datalong.groupby(level=-1).apply(lambda x: x.diff()/x.shift().abs(),group_keys=False)
-  df5['%short']=datashort.groupby(level=-1).apply(lambda x: x.diff()/x.shift().abs(),group_keys=False)
+  df5['%long']=datalong.groupby(level=-1,group_keys=False).apply(lambda x: x.diff()/x.shift().abs())
+  df5['%short']=datashort.groupby(level=-1,group_keys=False).apply(lambda x: x.diff()/x.shift().abs())
 
   #cumsum historico
 
   cumhist=inusual.groupby(level=-1)['V10vs50'].pct_change()
   cumhist.replace([np.inf, -np.inf], np.nan,inplace=True) 
-  df5['cumhist']=cumhist.groupby(level=-1).apply(lambda x: round((x+1).cumprod(),2),group_keys=False)
+  df5['cumhist']=cumhist.groupby(level=-1,group_keys=False).apply(lambda x: round((x+1).cumprod(),2))
 
   #CUM
   #LARGO
-  df5['cumlargo']=df5.groupby(level=-1)['cumhist'].apply(lambda x: x.rolling(window=vlargo).sum(),group_keys=False)
+  df5['cumlargo']=df5.groupby(level=-1,group_keys=False)['cumhist'].apply(lambda x: x.rolling(window=vlargo).sum())
   #CORTO
-  df5['cumcorto']=df5.groupby(level=-1)['cumhist'].apply(lambda x: x.rolling(window=vcorto).sum(),group_keys=False)
+  df5['cumcorto']=df5.groupby(level=-1,group_keys=False)['cumhist'].apply(lambda x: x.rolling(window=vcorto).sum())
 
 
 
