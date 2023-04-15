@@ -1240,7 +1240,7 @@ def plot_movinichist(df,sd,ed,activo,alto=10,ancho=10):
 
 def screen_activos_historico(df,vlargo=30,vcorto=15):
 
-  listadoact=df.data.groupby(['Date','industria','activo']).sum()
+  listadoact=df.data.groupby(['Date','industria','activo']).sum(numeric_only=True)
 
   #PRIMERA PARTE
   base=actividad_inusual(listadoact)
