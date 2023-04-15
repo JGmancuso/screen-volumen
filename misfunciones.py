@@ -1154,32 +1154,6 @@ def corr_industrias(df2,retorno,periodo=24):
 
   return corr
 
-def corr_activos(df2,retorno,periodo=24):
-  act=retorno.rolling(periodo).corr()
-  pre=df2.rolling(periodo).corr()
-
-  corr=pd.DataFrame(index=pre.loc[(slice(None),'Indice'),slice(None)].mean().index)
-  corr['CorrMedia']=pre.loc[(slice(None),'Indice'),slice(None)].mean().values
-
-  corr=corr.join(pre.loc[(pre.index[-1],'Indice'),slice(None)].T.droplevel(0,axis=1),how='left')
-
-  corr.rename(columns={'Indice':'Corractual'},inplace=True)
-
-  corr['Tipo']=0
-
-  for i in corr.index:
-    if corr.loc[i]['CorrMedia']>=-1 and corr.loc[i]['CorrMedia']<=0:
-      corr.loc[i,'Tipo']='Inversa'
-    elif corr.loc[i]['CorrMedia']>0 and corr.loc[i]['CorrMedia']<=0.4:
-      corr.loc[i,'Tipo']='Nula/Poca'
-    elif corr.loc[i]['CorrMedia']>0.4 and corr.loc[i]['CorrMedia']<=0.6:
-      corr.loc[i,'Tipo']='Poca'
-    elif corr.loc[i]['CorrMedia']>0.6 and corr.loc[i]['CorrMedia']<=0.8:
-      corr.loc[i,'Tipo']='Alta'
-    elif corr.loc[i]['CorrMedia']>0.8 and corr.loc[i]['CorrMedia']<=1:
-      corr.loc[i,'Tipo']='Muy Alta'
-
-  return corr
 
 class screener():
 
