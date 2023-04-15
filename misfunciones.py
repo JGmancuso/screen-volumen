@@ -888,13 +888,13 @@ def screen_activos(df,industrias='',Activos='todos'):
     for i in range(len(lideres)):
       lideres[i]+=".BA"
 
-    listadoact=df.data.groupby(['Date','industria','activo']).sum()
+    listadoact=df.data.groupby(['Date','industria','activo']).sum(numeric_only=True)
     listadoact=listadoact.loc[slice(None),slice(None),lideres]# solo lideres  
 
 
   elif Activos=='general':
 
-    listadoact=df.data.groupby(['Date','industria','activo']).sum()
+    listadoact=df.data.groupby(['Date','industria','activo']).sum(numeric_only=True)
 
     tickets=listadoact.index.get_level_values(2).unique().tolist()
     lideres=['ALUA','BBAR','BMA','BYMA','CEPU','COME','CRES','CVH','EDN','GGAL','HARG','LOMA','MIRG','PAMP','SUPV','TECO2','TGNO4','TRAN','TXAR','VALO','YPFD']
