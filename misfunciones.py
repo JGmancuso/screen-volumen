@@ -1227,7 +1227,7 @@ def plot_movinichist(df,sd,ed,activo,alto=10,ancho=10):
 
   ax1.plot( ejex,ejey,'v', color='orange')
 
-  ax1.legend( ['Precio','Movimiento inicial fuerte','Crecimento Volumen Acumulado'],loc=0)
+  ax1.legend( ['Precio','Crecimento Volumen Acumulado','Movimiento inicial fuerte'],loc=0)
 
   ax2.plot(df1.loc[(slice(sd,ed),activo),['movinic']].index.get_level_values(0),
              df1.loc[(slice(sd,ed),activo),['movinic']])
