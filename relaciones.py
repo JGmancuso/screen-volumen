@@ -68,3 +68,40 @@ def corr_activos(df2,retorno,periodo=24):
       corr.loc[i,'Tipo']='Muy Alta'
 
   return corr
+
+
+def RS(df,benchmark,media=36):
+  '''
+  Benchmark: colocar el nombre del activo con el que se compara, ej: merval ^MERV; ser un activo GGAL==> GGAL.BA
+  Media: detallar el valor de media que se quiere trabajar para RS, defecto 36
+  Posiblemente la ultima fecha no salga como consecuencia de que el indice no siempre tiene hasta la fecha actual cargado el valor.
+  Por lo que la formula generalmente otorga resultado con el valor relative strengh del dia anterior.
+  '''
+  objetivo=benchmark
+
+  #lista_act=activo.columns.unique().to_list()
+  #lista_act.remove('^MERV')
+  
+  #Preparar base para calculos
+  indice=df.data[df.data['activo']==objetivo]['Close'] # contra que se compara cada activo
+  activo=df.data.groupby(['Date','activo'])['Close'].sum().unstack('activo')
+  activo.drop('^MERV',axis=1,inplace=True)
+  
+  #Calculo
+  RS=activo.T/indice*1000
+  RS=RS.T
+  RS=RS.stack()
+  RS.name='RS'
+
+  #DataFrame
+  RS=pd.DataFrame(RS)
+  RS['RS_medio_%s'%(media)]=RS.groupby(level=-1,group_keys=False).apply(lambda x: x.rolling(media).mean())
+  RS['DIF_RS_media']=((RS['RS']/RS['RS_medio_%s'%(media)])-1)*100
+
+  RS['DIF_RS_media']=((RS['RS']/RS['RS_medio_%s'%(media)])-1)*100
+  RS['pos_DS']=RS.groupby(level=-1,group_keys=False)['DIF_RS_media'].apply(lambda x: x.rolling(media).std()*2)
+  RS['neg_DS']=RS.groupby(level=-1,group_keys=False)['DIF_RS_media'].apply(lambda x: x.rolling(media).std()*-2)
+  RS['pos_DS*media']=RS['pos_DS']*RS['DIF_RS_media']
+  RS['neg_DS*media']=RS['neg_DS']*RS['DIF_RS_media']
+
+  return (RS)
