@@ -65,8 +65,7 @@ def corr_activos(df2,retorno,periodo=24):
   corr=pd.DataFrame(index=pre.loc[(slice(None),'Indice'),slice(None)].mean().index)
   corr['CorrMedia']=pre.loc[(slice(None),'Indice'),slice(None)].mean().values
 
-  corr=corr.join(pre[pre.index.isin((slice(None),'Indice'),level=1)].T.droplevel(0,axis=1),how='left') # selecciona del MIndx solo la 2~ col el valor Indice
-
+  corr=corr.join(pre[pre.index.isin((slice(None),'Indice'),level=1)].T.droplevel(0,axis=1).iloc[:,-1],how='left') # selecciona del MIndx solo la 2~ col el valor Indice
   corr.rename(columns={'Indice':'Corractual'},inplace=True)
 
   corr['Tipo']=0
