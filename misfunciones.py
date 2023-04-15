@@ -869,8 +869,8 @@ def screen_industrias(df):
       resumen.loc[i,'Crec_Const']='X'
 
   return resumen
-
 def screen_activos(df,industrias='',Activos='todos'):
+
   '''
   Activos: "mas activos" los que salen del los sectores mas activos
   Activos: "lideres" merval lideres
@@ -891,7 +891,7 @@ def screen_activos(df,industrias='',Activos='todos'):
     listadoact=df.data.groupby(['Date','industria','activo']).sum()
     listadoact=listadoact.loc[slice(None),slice(None),lideres]# solo lideres  
 
-  
+
   elif Activos=='general':
 
     listadoact=df.data.groupby(['Date','industria','activo']).sum()
@@ -904,11 +904,11 @@ def screen_activos(df,industrias='',Activos='todos'):
       tickets.pop(tickets.index(i))
 
     #listadoact=df.data.groupby(['Date','industria','activo']).sum()
-    listadoact=listadoact.loc[slice(None),slice(None),tickets]# solo lideres  
+    listadoact=listadoact.loc[slice(None),slice(None),tickets]# solo generales  
 
   elif Activos=='todos':
 
-    listadoact=df.data.groupby(['Date','industria','activo']).sum()
+    listadoact=df.data.groupby(['Date','industria','activo']).sum(numeric_only=True) 
 
 
   #PRIMERA PARTE
@@ -942,7 +942,7 @@ def screen_activos(df,industrias='',Activos='todos'):
 
   #SECTORES QUE MAS CRECIO en promedio ACUMULADO EN PROMEDIO
 
-  acumprommej=crecimiento.iloc[-240:].mean()
+  acumprommej=crecimiento.loc[str(datetime.datetime.utcnow().year)].mean() # VER
   acumprommej=acumprommej.sort_values(ascending=False).head(10)
 
   #SECTORES QUE MAS % entro en 60-30 dias
@@ -956,13 +956,11 @@ def screen_activos(df,industrias='',Activos='todos'):
   crec30=((data30/data30.shift(1))-1).replace([np.nan,np.inf,-np.inf],0).cumsum()
   mascrec30=crec30.iloc[-1].sort_values(ascending=False).head(10)
 
-
-
   crecacum=acummej.index
   crecacumprom=acumprommej.index
   crecconstante=mascrec60.loc[mascrec60.index.isin(mascrec30.index)].index
 
-  resumen=set(movmaduro.tolist()+movenmad.tolist()+movinic.tolist()+crecacum.tolist()+crecacumprom.tolist()+crecconstante.tolist())
+  resumen=movmaduro.tolist()+movenmad.tolist()+movinic.tolist()+crecacum.tolist()+crecacumprom.tolist()+crecconstante.tolist()
   nombres=['Maduro','En_Maduracion','Inic_Mov','Inic_Fuerte','Crec_Acum','Crec_A_Prom','Crec_Const']
 
   resumen=pd.DataFrame(np.zeros((len(resumen),len(nombres))),columns=nombres,index=resumen)
@@ -995,7 +993,7 @@ def screen_activos(df,industrias='',Activos='todos'):
     if i in crecconstante:
       resumen.loc[i,'Crec_Const']='X'
 
-  return resumen
+    return resumen
 
 def preparar_corrind(df):
 
