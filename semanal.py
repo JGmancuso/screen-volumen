@@ -16,6 +16,8 @@ import seaborn as sns
 
 def base_inicio(sd,ed,activos='externo'):
 
+  import pandas as pd
+
   #tickers= tickers# funcion que determine los ticker automaticamente
 
   df=pd.DataFrame()
