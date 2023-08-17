@@ -14,6 +14,14 @@ import os.path
 import yfinance as yf
 import seaborn as sns
 
+
+import requests
+request = request.get("https://raw.githbusercontent.com/JGmancuso/screen-volumen/relaciones.py")
+with open("relaciones.py", "wb") as f:
+  f.write(request.content)
+
+from relaciones import *
+
 def base_inicio(sd,ed,activos='externo'):
 
   import pandas as pd
