@@ -15,10 +15,10 @@ import yfinance as yf
 import seaborn as sns
 
 
-$ git submodule add https://github.com/JGmancuso/screen-volumen
-$ ln -s screen-volumen/relaciones.py
-$ git add .gitmodules relaciones.py
-$ git commit -m "https://raw.githbusercontent.com/JGmancuso/screen-volumen/relaciones.p"
+git submodule add https://github.com/JGmancuso/screen-volumen
+ln -s screen-volumen/relaciones.py
+git add .gitmodules relaciones.py
+git commit -m "https://raw.githbusercontent.com/JGmancuso/screen-volumen/relaciones.p"
 '''
 import requests
 
