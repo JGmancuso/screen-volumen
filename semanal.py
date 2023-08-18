@@ -30,13 +30,13 @@ with open("relaciones.py", "wb") as f:
 
 from relaciones import *
 '''
-def conteo(df,lookback=[90,60,30,15]):
+def conteoS(df,lookback=[18,12,6,3]):
 
   df2=pd.DataFrame(index=df.index.get_level_values(1).unique())
 
   for i in range(0,len(lookback)):
     
-    df3=df.iloc[range(-len(df.index.get_level_values(1).unique())*lookback[i]+1, 0), :].copy() #90 es la cantidad de dias no activos.
+    df3=df.iloc[range(-len(df.index.get_level_values(1).unique())*lookback[i]+1, 0), :].copy() #i es la cantidad de dias no activos.
 
     for x in df.index.get_level_values(1).unique(): 
 
@@ -349,7 +349,7 @@ def screen_activosS(df,industrias='',Activos='todos'):
   base=base.reindex().groupby(['Date','activo']).sum()
   #normalizar?? No por que no tiene nada que ver que tenga mas activos y por ende no va a tener mas actividad inusual.
   inusual=actividad_inusualS(base)
-  cuenta=conteo(inusual)
+  cuenta=conteoS(inusual)
 
   #SEGUNDA PARTE
 
