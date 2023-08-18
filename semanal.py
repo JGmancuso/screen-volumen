@@ -30,6 +30,31 @@ with open("relaciones.py", "wb") as f:
 
 from relaciones import *
 '''
+def conteo(df,lookback=[90,60,30,15]):
+
+  df2=pd.DataFrame(index=df.index.get_level_values(1).unique())
+
+  for i in range(0,len(lookback)):
+    
+    df3=df.iloc[range(-len(df.index.get_level_values(1).unique())*lookback[i]+1, 0), :].copy() #90 es la cantidad de dias no activos.
+
+    for x in df.index.get_level_values(1).unique(): 
+
+      df2['conteo'+ str(lookback[i]) +'d']=df3.groupby([str(df.index.levels[1].name),])['inusual'].sum()
+
+  for i in range(0,len(lookback)):
+
+    # incremental de ultimos periodos con actividad inusual.
+    if i==len(lookback)-1:
+    
+      df2['intervalo'+str(lookback[i])+'-'+str(0)]=df2['conteo'+ str(lookback[i]) +'d']
+    else:
+      
+      df2['intervalo'+str(lookback[i])+'-'+str(lookback[i+1])]=df2['conteo'+ str(lookback[i]) +'d']-df2['conteo'+ str(lookback[i+1]) +'d']
+      
+
+  return df2
+
 def base_inicio(sd,ed,activos='externo'):
 
   import pandas as pd
