@@ -353,10 +353,10 @@ def screen_activosS(df,industrias='',Activos='todos'):
 
   #SEGUNDA PARTE
 
-  noventad=cuenta['intervalo90-60'].sort_values(ascending=False).head(10)
-  sesentad=cuenta['intervalo60-30'].sort_values(ascending=False).head(10)
-  treintad=cuenta['intervalo30-15'].sort_values(ascending=False).head(10)
-  quinced=cuenta['intervalo15-0'].sort_values(ascending=False).head(10)
+  noventad=cuenta['intervalo18-12'].sort_values(ascending=False).head(10)
+  sesentad=cuenta['intervalo12-6'].sort_values(ascending=False).head(10)
+  treintad=cuenta['intervalo6-3'].sort_values(ascending=False).head(10)
+  quinced=cuenta['intervalo3-0'].sort_values(ascending=False).head(10)
 
   movmaduro=noventad.loc[noventad.index.isin(treintad.index)].index
   movenmad=sesentad.loc[sesentad.index.isin(treintad.index)].index
