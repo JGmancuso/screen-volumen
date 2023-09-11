@@ -100,7 +100,9 @@ def matriztrabajoS(df,freq):
         'High':'max',
         'Low':'min',
         'Close':'last',
-        'Volume':'sum'})
+        'Volume':'sum',
+        'sector':'last',
+        'industria':'last'})
 
     #Ultimas 10 semanas.
     df1['Vol_10']=df1.groupby(by='activo',group_keys=False)['Volume'].apply(lambda x: x.rolling(10).sum())
