@@ -55,7 +55,7 @@ def conteoS(df,lookback=[18,12,6,3]):
 
   return df2
 
-def base_inicio(sd,ed,activos='externo'):
+def base_inicio1(sd,ed,activos='externo'):
 
   import pandas as pd
 
@@ -81,6 +81,47 @@ def base_inicio(sd,ed,activos='externo'):
 
       df1=yf.download(tickers=i, start=sd, end=ed)
       df1['activo']=i
+
+
+      df1.reset_index(inplace=True)
+
+      df=pd.concat([df,df1],ignore_index=True)
+
+  return df
+
+def base_inicio(sd,ed,activos='externo'):
+
+  import pandas as pd
+
+  #tickers= tickers# funcion que determine los ticker automaticamente
+
+  df=pd.DataFrame()
+
+  if activos!='externos':
+
+    info=pd.read_csv("/content/drive/MyDrive/activosector.csv",index_col='activo')
+    del info['Unnamed: 0']
+
+
+    tickers=info.index.unique()
+
+    for i in tickers:
+
+      df1=yf.download(tickers=i, start=sd, end=ed)
+      df1['activo']=i
+
+      if i=='^MERV':
+        ''
+      else:
+        try:
+
+          df1['sector']=info.loc[i]['sector']
+          df1['industria']=info.loc[i]['industria']
+
+        except KeyError:
+
+          df1['sector']='NN'
+          df1['industria']='NN'
 
 
       df1.reset_index(inplace=True)
