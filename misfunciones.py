@@ -835,7 +835,7 @@ def screen_industrias(df):
   crecacumprom=acumprommej.index
   crecconstante=mascrec60.loc[mascrec60.index.isin(mascrec30.index)].index
 
-  resumen=set(movmaduro.tolist()+movenmad.tolist()+movinic.tolist()+crecacum.tolist()+crecacumprom.tolist()+crecconstante.tolist())
+  resumen=pd.unique(movmaduro.tolist()+movenmad.tolist()+movinic.tolist()+crecacum.tolist()+crecacumprom.tolist()+crecconstante.tolist())
   nombres=['Maduro','En_Maduracion','Inic_Mov','Inic_Fuerte','Crec_Acum','Crec_A_Prom','Crec_Const']
 
   resumen=pd.DataFrame(np.zeros((len(resumen),len(nombres))),columns=nombres,index=resumen)
