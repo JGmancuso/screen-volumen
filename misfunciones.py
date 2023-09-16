@@ -462,7 +462,7 @@ def grafcomp(data,intervalo=90,subind='',activo='',sector=''):
 
   fig, axs = plt.subplots(4, 1, sharex=True)
   fig.set_size_inches(14,14)
-  plt.legend([ax0,ax1, ax2, ax3],["Sector", "Merval", "Corr Precio", "Corr Retorno"])
+ 
 
   if subind=='no':
     precio,corr=comportamiento(data,periodo=intervalo,industria='no')
