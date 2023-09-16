@@ -462,29 +462,29 @@ def grafcomp(data,intervalo=90,subind='',activo='',sector=''):
 
   fig, axs = plt.subplots(4, 1, sharex=True)
   fig.set_size_inches(14,14)
- 
-
+   
+  
   if subind=='no':
     precio,corr=comportamiento(data,periodo=intervalo,industria='no')
     mostrar=precio[[activo,'^MERV']].copy()
     mostrar['corrP']=corr.loc[(slice(None),activo),'corrP'].values
     mostrar['corrR']=corr.loc[(slice(None),activo),'corrR'].values  
-    mostrar[activo].plot(ax=axs[0])#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
-    mostrar['^MERV'].plot(ax=axs[1])
-    mostrar['corrP'].plot(ax=axs[2])
-    mostrar['corrR'].plot(ax=axs[3])
-
-
+    mostrar[activo].plot(ax=axs[0]).title.set_text('Activo')#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
+    mostrar['^MERV'].plot(ax=axs[1]).title.set_text('Indice')
+    mostrar['corrP'].plot(ax=axs[2]).title.set_text('Correlacion Precio')
+    mostrar['corrR'].plot(ax=axs[3]).title.set_text('Correlacion Retorno')
+  
+  
   else:
-
+  
     precio,corr=comportamiento(data,periodo=intervalo,industria='si')
     mostrar=precio[[sector,'Indice']].copy()
     mostrar['corrP']=corr.loc[(slice(None),sector),'corrP'].values
     mostrar['corrR']=corr.loc[(slice(None),sector),'corrR'].values  
-    mostrar[sector].plot(ax=axs[0],label='Sector')#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
-    mostrar['Indice'].plot(ax=axs[1],label='Indice')
-    mostrar['corrP'].plot(ax=axs[2],label='Corr Precio')
-    mostrar['corrR'].plot(ax=axs[3],label='Corr Retorno')
+    mostrar[sector].plot(ax=axs[0]).title.set_text('Sector')#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
+    mostrar['Indice'].plot(ax=axs[1]).title.set_text('Indice')
+    mostrar['corrP'].plot(ax=axs[2]).title.set_text('Correlacion Precio')
+    mostrar['corrR'].plot(ax=axs[3]).title.set_text('Correlacion Retorno')
 
 
 def actualizacion(nombre,intervalo,activos='no'):
