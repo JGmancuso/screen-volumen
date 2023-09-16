@@ -481,10 +481,10 @@ def grafcomp(data,intervalo=90,subind='',activo='',sector=''):
     mostrar=precio[[sector,'Indice']].copy()
     mostrar['corrP']=corr.loc[(slice(None),sector),'corrP'].values
     mostrar['corrR']=corr.loc[(slice(None),sector),'corrR'].values  
-    mostrar[sector].plot(ax=axs[0]).legend('Sector')#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
-    mostrar['Indice'].plot(ax=axs[1]).legend('Indice')
-    mostrar['corrP'].plot(ax=axs[2]).legend('Corr Precio')
-    mostrar['corrR'].plot(ax=axs[3]).legend('Corr Retorno')
+    mostrar[sector].plot(ax=axs[0],label='Sector')#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
+    mostrar['Indice'].plot(ax=axs[1],label='Indice')
+    mostrar['corrP'].plot(ax=axs[2],label='Corr Precio')
+    mostrar['corrR'].plot(ax=axs[3],label='Corr Retorno')
 
 
 def actualizacion(nombre,intervalo,activos='no'):
