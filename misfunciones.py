@@ -469,10 +469,10 @@ def grafcomp(data,intervalo=90,subind='',activo='',sector=''):
     mostrar=precio[[activo,'^MERV']].copy()
     mostrar['corrP']=corr.loc[(slice(None),activo),'corrP'].values
     mostrar['corrR']=corr.loc[(slice(None),activo),'corrR'].values  
-    mostrar[activo].plot(ax=axs[0])#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
-    mostrar['^MERV'].plot(ax=axs[1])
-    mostrar['corrP'].plot(ax=axs[2])
-    mostrar['corrR'].plot(ax=axs[3])
+    mostrar[activo].plot(ax=axs[0]).legend('Sector')#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
+    mostrar['^MERV'].plot(ax=axs[1]).legend('Indice')
+    mostrar['corrP'].plot(ax=axs[2]).legend('Corr Precio')
+    mostrar['corrR'].plot(ax=axs[3]).legend('Corr Retorno')
 
 
   else:
