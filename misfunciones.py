@@ -1315,7 +1315,7 @@ def datosdrawdown(activo):
   df['_date']=df.index
   df.dd_start=df.dd_start.mask(df.drawdown==0,0) #completa en la comlumna dd-start con 0 cuando drawdown es igual a 0
   df.dd_start=df.dd_start.mask((df.drawdown<0)&(df.drawdown.shift()==0),df._date) #pone fecha de inicio, cuando drawdown es negativo y el anterior fue positivo.
-  df.dd_start=pd.to_datetime(df.dd_start) # pone en formato fecha.
+  df.dd_start=pd.to_datetime(df.dd_start, errors='coerce') # pone en formato fecha.
   df.dd_start.ffill(inplace=True)# rellena los valores NaT con el de la fecha de incio del drawdown.
   df.dd_start=df.dd_start.mask(df.drawdown==0,np.nan) # cuando drawdown es = a 0 compleca con nan
   df['dd_duration']=df.groupby('dd_start').dd_start.cumcount()+1 # crea colmna de duracion grupa por fecha y suma el acumulado de conteo. 
