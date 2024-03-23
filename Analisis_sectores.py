@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as goimport pandas as pd
-import numpy as np
+import plotly.graph_objects as goimport 
+
 from scipy import stats
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
@@ -9,8 +9,6 @@ from datetime import timedelta
 from bs4 import BeautifulSoup
 import requests
 from datetime import datetime
-#import mplfinance as mpf
-#import ta
 import datetime
 import os.path
 import yfinance as yf
