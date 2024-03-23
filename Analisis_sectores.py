@@ -1,3 +1,6 @@
+import pandas as pd
+import numpy as np
+
 def prepdatossector(df,media,benchmark,corte,comparacion):
 
   """
