@@ -392,3 +392,98 @@ def interpretacion_vol(base_semana,indicesS,semana_analisis):
         round(var[var>0]*100,2),'\n','\n',
         'Registrando un movimiento mayor a media habitual (+ 1 desviacion standar) los siguientes sectores','\n','\n',
         AC[AC>0],'\n')
+def base_dato_vol(baseD):
+
+  #PRIMERA PARTE
+
+  df=pd.DataFrame()
+  info=pd.read_excel("/content/drive/MyDrive/activosectorV.xlsx",index_col='activo')#/content/activosectorV.xlsx
+  info=info[['sector','industria','investing']]
+  info.reset_index(inplace=True)
+  symbolo=info.index.values
+
+
+  base=baseD.data.copy()
+
+
+  for i in base.activo.unique():
+
+    base.loc[base["activo"] ==i,'industria']=info[info["activo"] ==i]['investing'].values[0]
+
+
+  RS,performance=prepdatossector(base,36,'^MERV',10,'industria')
+
+  sem=performance.groupby([pd.Grouper(level=0, freq='W-FRI'),'industria']).sum()
+
+  #SEGUNDA PARTE
+
+
+  # Calculo Flujo Monetario
+
+  df1=baseD.data.copy()
+
+  df1['flujo_monetario']=((df1['Low']+df1['High']+df1['Close'])/3)*df1['Volume']
+
+
+
+
+  for i in df1.activo.unique():
+
+    df1.loc[df1["activo"] ==i,'industria']=info[info["activo"] ==i]['investing'].values[0]
+
+
+  info=df1[['Volume','Volvsmed50','activo','industria','flujo_monetario']]
+
+
+  comparacion='industria'
+  base=info.copy()
+  g=pd.DataFrame() #DF de almacenamiento
+
+  #indice
+
+  #normalizar activo y luego sumar a sector
+
+  for sector in base['activo'].unique():
+
+    filtro=base[base['activo']==sector]['Volume']
+    max=filtro.max()
+    min=filtro.min()
+
+    filtro2=base[base['activo']==sector]
+    norm=pd.DataFrame(columns=['norm'])
+    norm['norm']=(((filtro) - (min)) / ((max) - (min)))
+    filtro2 =filtro2.join(norm,on='Date')
+
+    g=pd.concat([g,filtro2])
+
+  base=g.groupby(['Date',comparacion]).sum(numeric_only=False) # suma de valores normalizados individualmente de manera previa
+
+  base['normmed50']=base.groupby(level=-1,group_keys=False)['norm'].apply(lambda x: x.rolling(50).mean()) # media de la normalizacion
+  base['dif_norm_media']=base.groupby(level=-1,group_keys=False).apply(lambda x: x['norm']-x['normmed50']) # dif del valor normal con su media
+  base['acum_dif']=base.groupby(level=-1,group_keys=False).apply(lambda x: x['dif_norm_media'].cumsum()) #acumular diferencia de arriba
+  base['acum_med']=base.groupby(level=-1,group_keys=False)['acum_dif'].apply(lambda x: x.rolling(36).mean()) # sacar media del valor acumualdo
+  base['tendencia_anual']=base.groupby(level=-1,group_keys=False)['acum_dif'].apply(lambda x: x.rolling(200).mean()) # sacar media del valor acumualdo
+
+  #normalizar indice
+  '''
+  info[info['activo']=='^MERV']
+
+  Este filtro no sirve por que trae el indice y el mismo no tiene volumen, hay que ver la suma del volumen de los sectores.
+
+  '''
+
+  indice=base.reset_index().groupby('Date').sum(numeric_only=True)[['Volume','norm']]
+  indice['normmed50']=indice['norm'].rolling(50).mean() # media de la normalizacion
+  indice['dif_norm_media']=indice['norm']-indice['normmed50'] # dif del valor normal con su media
+  indice['acum_dif']=indice['dif_norm_media'].cumsum() #acumular diferencia de arriba
+  indice['acum_med']=indice['acum_dif'].rolling(36).mean() # sacar media del valor acumualdo
+
+  #Flujo de efectivo
+
+  base['normmed50f']=base.groupby(level=-1,group_keys=False)['flujo_monetario'].apply(lambda x: x.rolling(50).mean()) # media de la normalizacion
+  base['dif_flujo_media']=base.groupby(level=-1,group_keys=False).apply(lambda x: x['flujo_monetario']-x['normmed50f']) # dif del valor normal con su media
+  base['acum_dif_flujo']=base.groupby(level=-1,group_keys=False).apply(lambda x: x['dif_flujo_media'].cumsum()) #acumular diferencia de arriba
+  base['acum_med_flujo']=base.groupby(level=-1,group_keys=False)['acum_dif_flujo'].apply(lambda x: x.rolling(36).mean()) # sacar media del valor acumualdo
+  base['tendencia_anual_flujo']=base.groupby(level=-1,group_keys=False)['acum_dif_flujo'].apply(lambda x: x.rolling(200).mean()) # sacar media del valor acumualdo
+
+  return base,indice,sem
