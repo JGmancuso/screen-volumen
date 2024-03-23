@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 
 def prepdatossector(df,media,benchmark,corte,comparacion):
 
