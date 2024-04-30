@@ -323,10 +323,10 @@ def plotactividad(df,sd,ed,activo,panel1='V10vs50',panel2='inusual',alto=14,anch
   df.loc[(slice(sd,ed),activo),[panel1]].plot(ax=axs[1])#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
   df.loc[(slice(sd,ed),activo),[panel2]].plot(ax=axs[2])
 
-def actividad_inusual(df,umbralmed=40,umbralprev=40):
+def actividad_inusual(df,umbralmed=100,umbralprev=40):
 
   # parametros para inusual.
-  df['inusual30']=np.where(df['Volvsmed30']>umbralmed,1,0)
+  df['inusual30']=np.where(df['Volvsmed10']>umbralmed,1,0)
 
   # para definir si es mayor en un 40% al dia anterior, hay que sacar los porcentajes.
 
