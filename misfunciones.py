@@ -323,7 +323,14 @@ def plotactividad(df,sd,ed,activo,panel1='V10vs50',panel2='inusual',alto=14,anch
   df.loc[(slice(sd,ed),activo),[panel1]].plot(ax=axs[1])#'Volvsmed30','Volvsmed10','V10vs50','V30vs50'
   df.loc[(slice(sd,ed),activo),[panel2]].plot(ax=axs[2])
 
-def actividad_inusual(df,umbralmed=100,umbralprev=40):
+def actividad_inusual(df,umbralmed=50,umbralprev=100):
+  '''
+  Para ser contabilizado como actividad inusual tiene que haber 2 requisitos.
+  1- Umbral sobre el volumen medio de 10 ruedas tiene que ser superior a xxx porcentaje, de forma standar tiene que superar en un 50%.
+  2- Umbral al volumen previo tiene que superar en xxx porcentaje, de forma standar tiene que superar el 100%.
+
+  para contar movimiento institucional.
+  '''
 
   # parametros para inusual.
   df['inusual30']=np.where(df['Volvsmed10']>umbralmed,1,0)
