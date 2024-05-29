@@ -120,7 +120,7 @@ def RS(df,benchmark,media=36):
   RS['neg_DS*media']=RS['neg_DS']*RS['DIF_RS_media']
   RS['max_RS_90']=RS.groupby(level=-1,group_keys=False)['RS'].apply(lambda x: x.rolling(90).max())
   # idenficar si hay maximo o no
-  RS['max_neto']=RS.groupby(level=-1,group_keys=False)['max_90'].apply(lambda x: x-x.shift(1))
+  RS['max_neto']=RS.groupby(level=-1,group_keys=False)['max_RS_90'].apply(lambda x: x-x.shift(1))
   RS['new_RS_max']=np.where(RS['max_neto']>0,'si','no')
 
   return (RS)
