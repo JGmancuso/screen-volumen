@@ -422,3 +422,25 @@ def screen_activos_sol(df,industrias='',Activos='todos'):
       resumen.loc[i,'Crec_Const']='X'
 
   return resumen
+
+def comportamiento_activos_sol(df,corr,Beta,RS,Activos='todos'):
+  '''
+  Funcion que trae como resultado aquellos activos que tuvieron volumen en XXX periodo y aquellos que vienen con tasa de crecimiento.
+  Ademas realiza resumen de sus correlaciones y betas.
+
+  Activos pude tener el valor:
+    'todos'= trae como resultado los principales activos
+    'mas activos'=trae como resultados los activos de las industrias con mas actvidad de volumen
+    'general'= realiza el filtro para los activos del panel general.
+    'lideres'=realiza el filtro para los activos del panel general.
+  
+  Cargar matriz de analisis(df), matriz de correlaciones y de beta (corr y Beta).
+  '''
+  #hasta aca el Corte
+  resumen=screen_activos_sol(df,Activos=Activos) # esta funcion es la que aplica el filtro al tipo de activos.
+  resumen=pd.concat([resumen,corr],axis=1,join='inner')
+  resumen=pd.concat([resumen,Beta],axis=1,join='inner')
+  resumen=pd.concat([resumen,RS],axis=1,join='inner')
+  resumen=resumen.sort_values('DIF_RS_media',ascending=False)
+
+  return resumen
