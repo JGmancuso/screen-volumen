@@ -1,6 +1,24 @@
 
-def matriztrabajo_solucion(tickers,start,end,activos='externos'):
+import pandas as pd
+import numpy as np
+from scipy import stats
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from datetime import timedelta
+from bs4 import BeautifulSoup
+import requests
+from datetime import datetime
+#import mplfinance as mpf
+#import ta
+import datetime
+import os.path
+import yfinance as yf
+import seaborn as sns
 
+
+
+def matriztrabajo_solucion(tickers,start,end,activos='externos'):
+  import yfinance as yf
   df4=pd.DataFrame()
 
   if activos!='externos':
