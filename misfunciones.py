@@ -1072,8 +1072,11 @@ def preparar_corrind(df):
 def prep_corract(df):
   df1=df.data.copy()
   df1.reset_index(inplace=True)
+  df1['Date'] = pd.to_datetime(df1['Date'])  
+  
   #Agrupacion por semana INDUSTRIA / ACTIVO
   df1=df1.groupby([pd.Grouper(key='Date', freq='W-FRI'),'activo'])['Close'].last()
+  
   # columnas LEVEL=0 son las industrias/LEVEL=1 son los activos
   df1=df1.unstack(level=(1))
   df1.fillna(method='ffill', inplace=True)
