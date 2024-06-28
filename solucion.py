@@ -466,3 +466,30 @@ def actividad_inusual(df,umbralmed=50,umbralprev=100):
   df['inusual']=np.where((df['inusual30']==1)&(df['inusualprev']==1),1,0)
 
   return df
+
+
+def conteo(df,lookback=[90,60,30,15]):
+  df=df.copy()
+
+  df2=pd.DataFrame(index=df.index.get_level_values(1).unique())
+
+  for i in range(0,len(lookback)):
+    
+    df3=df.iloc[range(-len(df.index.get_level_values(1).unique())*lookback[i]+1, 0), :].copy() #90 es la cantidad de dias no activos.
+
+    for x in df.index.get_level_values(1).unique(): 
+
+      df2['conteo'+ str(lookback[i]) +'d']=df3.groupby([str(df.index.levels[1].name),])['inusual'].sum()
+
+  for i in range(0,len(lookback)):
+
+    # incremental de ultimos periodos con actividad inusual.
+    if i==len(lookback)-1:
+    
+      df2['intervalo'+str(lookback[i])+'-'+str(0)]=df2['conteo'+ str(lookback[i]) +'d']
+    else:
+      
+      df2['intervalo'+str(lookback[i])+'-'+str(lookback[i+1])]=df2['conteo'+ str(lookback[i]) +'d']-df2['conteo'+ str(lookback[i+1]) +'d']
+      
+
+  return df2
