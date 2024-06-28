@@ -213,3 +213,79 @@ def grupo_activo_volumen(df):
   df1=df1.droplevel(0,0)
  
   return df1
+
+
+def prep_corract_sol(df):
+  
+  df1=df.data.copy()
+  df1.reset_index(inplace=True)
+  #Agrupacion por semana INDUSTRIA / ACTIVO
+  df1['Date'] = pd.to_datetime(df1['Date'])  
+
+  df1=df1.groupby([pd.Grouper(key='Date', freq='W-FRI'),'activo'])['Close'].last()
+  
+  # columnas LEVEL=0 son las industrias/LEVEL=1 son los activos
+  df1=df1.unstack(level=(1))
+  df1.fillna(method='ffill', inplace=True)
+  df2 = pd.DataFrame()
+  #normaliza entre 0 ~ 1 y suma los sectores/idustria para poder calcular la correlacion.
+
+  for activo in df1.columns:
+      data = (df1[activo] - df1[activo].min()) / (df1[activo].max() - df1[activo].min())
+      df2[activo] = data
+
+  #Datos normalizados de cada industria/sector CACULA LA CORRELACION EN BASE A PRECIO
+  #Saco datos del MERVAL para poder calcular la correlacion.
+
+  df3=df.data[df.data.activo=='^MERV']['Close'].copy()
+  df3 = df3.reset_index() # Reset the index to include 'Date' as a column
+  df3['Date'] = pd.to_datetime(df3['Date']) # Convert 'Date' column to datetime
+  df3 = df3.set_index('Date') # Set 'Date' column as the index
+  df3=df3.resample( "W-FRI").last() # Now you can resample with a datetime index
+  #df3=df3.reset_index()
+  #df3=df3.resample( "W-FRI")
+  #df3=df3.groupby(pd.Grouper(key="Date", freq="W-FRI")).last()
+
+
+  # NORMALIZO DATOS DEL MERVAL
+
+  df3=(df3-df3.min())/(df3.max()-df3.min())
+  df3=df3.rename(columns={'Close':'Indice'})
+
+  df2=pd.concat([df2,df3],axis=1)# UNIFICO
+
+
+  #RETORNOS IDEM ANTERIOR PERO CALCULADO EN RETORNOS
+
+  retorno=pd.DataFrame(index=df1.index,columns=df1.columns)
+
+  df1.fillna(method='ffill', inplace=True)
+
+  #for i in df1.columns:#df1.columns.levels[1]
+    
+  retorno=(df1/df1.shift(1))-1
+
+
+  df4 = pd.DataFrame()
+  for activo in retorno.columns:
+      data = ((retorno[activo]*1000) - (retorno[activo].min()*1000)) / ((retorno[activo].max()*1000) - (retorno[activo].min()*1000))
+      df4[activo] = data
+
+  df3=df.data[df.data.activo=='^MERV']['Close'].copy()
+  df3 = df3.reset_index() # Reset the index to include 'Date' as a column
+  df3['Date'] = pd.to_datetime(df3['Date']) # Convert 'Date' column to datetime
+  df3 = df3.set_index('Date') # Set 'Date' column as the index
+  df3=df3.resample( "W-FRI").last() # Now you can resample with a datetime index
+  df3=(df3/df3.shift(1))-1
+  df3=(df3-df3.min())/(df3.max()-df3.min())
+  #df3.name='Indice'
+  df3=df3.rename(columns={'Close':'Indice'})
+  df3.fillna(method='ffill', inplace=True)
+
+  retorno=pd.concat([df4,df3],axis=1)
+
+
+  retorno['Indice'].fillna(method='ffill', inplace=True)
+  df2['Indice'].fillna(method='ffill', inplace=True)
+
+  return df2,retorno
