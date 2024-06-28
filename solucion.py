@@ -162,3 +162,45 @@ class Volumen_sol():
     self.industria=grupo_industria_volumen(data.data)
     self.sectores=grupo_sectores_volumen(data.data)
     self.activos=grupo_activo_volumen(data.data)
+
+def grupo_sectores_volumen(df):
+  '''
+  SCREENER POR SECTOR POR VOLUMEN
+
+  Funcion trae ultima fila de cada sector con los datos de variacion de volumen.
+
+  '''
+
+  df1=df.groupby(['Date','sector'])[['Volume','Vol_50','Vol_30','Vol_10','Volmed_50','Volmed_30','Volmed_10','Volvsmed50','Volvsmed30','Volvsmed10','V10vs50','V30vs50']].sum()
+  df1=df1.iloc[-len(df1.index.get_level_values(1).unique()):]
+  df1=df1.droplevel(0,0)
+ 
+  return df1
+
+def grupo_industria_volumen(df):
+  '''
+  SCREENER POR INDSUTRIA POR VOLUMEN
+
+  Funcion trae ultima fila de cada industria con los datos de variacion de volumen.
+
+  '''
+
+  df1=df.groupby(['Date','industria'])[['Volume','Vol_50','Vol_30','Vol_10','Volmed_50','Volmed_30','Volmed_10','Volvsmed50','Volvsmed30','Volvsmed10','V10vs50','V30vs50']].sum()
+  df1=df1.iloc[-len(df1.index.get_level_values(1).unique()):]
+  df1=df1.droplevel(0,0)
+ 
+  return df1
+
+def grupo_activo_volumen(df):
+  '''
+  SCREENER POR ACTIVO POR VOLUMEN
+
+  Funcion trae ultima fila de cada activo con los datos de variacion de volumen.
+
+  '''
+
+  df1=df.groupby(['Date','activo'])[['Volume','Vol_50','Vol_30','Vol_10','Volmed_50','Volmed_30','Volmed_10','Volvsmed50','Volvsmed30','Volvsmed10','V10vs50','V30vs50']].sum()
+  df1=df1.iloc[-len(df1.index.get_level_values(1).unique()):]
+  df1=df1.droplevel(0,0)
+ 
+  return df1
