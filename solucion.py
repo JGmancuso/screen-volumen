@@ -19,6 +19,12 @@ import seaborn as sns
 
 def matriztrabajo_solucion(tickers,start,end,activos='externos'):
   import yfinance as yf
+
+  sd = start
+  ed = end
+  tickers= tickers# funcion que determine los ticker automaticamente
+  
+  
   df4=pd.DataFrame()
 
   if activos!='externos':
