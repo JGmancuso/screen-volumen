@@ -23,6 +23,7 @@ def matriztrabajo_solucion(tickers,start,end,activos='externos'):
   sd = start
   ed = end
   tickers= tickers# funcion que determine los ticker automaticamente
+  sd_e='2024-05-25'
   
   
   df4=pd.DataFrame()
