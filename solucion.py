@@ -444,3 +444,25 @@ def comportamiento_activos_sol(df,corr,Beta,RS,Activos='todos'):
   resumen=resumen.sort_values('DIF_RS_media',ascending=False)
 
   return resumen
+
+def actividad_inusual(df,umbralmed=50,umbralprev=100):
+  '''
+  Para ser contabilizado como actividad inusual tiene que haber 2 requisitos.
+  1- Umbral sobre el volumen medio de 10 ruedas tiene que ser superior a xxx porcentaje, de forma standar tiene que superar en un 50%.
+  2- Umbral al volumen previo tiene que superar en xxx porcentaje, de forma standar tiene que superar el 100%.
+
+  para contar movimiento institucional.
+  '''
+
+  # parametros para inusual.
+  df['inusual30']=np.where(df['Volvsmed10']>umbralmed,1,0)
+
+  # para definir si es mayor en un 40% al dia anterior, hay que sacar los porcentajes.
+
+  df['inusualprev']=np.where(((df['Volume']/df['Volume'].shift((len(df.index.get_level_values(1).unique()))))-1)*100>umbralprev,1,0)
+
+  #unificando concepto de inusual
+
+  df['inusual']=np.where((df['inusual30']==1)&(df['inusualprev']==1),1,0)
+
+  return df
