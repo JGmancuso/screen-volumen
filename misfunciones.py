@@ -353,6 +353,7 @@ def agrupar_volumen(df,objetivo='activo'):
   return df
 
 def conteo(df,lookback=[90,60,30,15]):
+  df=df.copy()
 
   df2=pd.DataFrame(index=df.index.get_level_values(1).unique())
 
