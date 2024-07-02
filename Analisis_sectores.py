@@ -265,48 +265,51 @@ def clasif_vol(base,indice,period_dif,period_med):
   # metodos de clasificacion:
 
   #Acumulado.
-
-
+  
+  base=base.reset_index()
+  base['Date']=pd.to_datetime(base['Date'])
+  base = base.set_index('Date')
+  
   base['volumcum']=base.groupby(level=-1,group_keys=False)['Volume'].apply(lambda x: x.cumsum())
   base_semana=base.groupby([pd.Grouper(level=0, freq='W-FRI'),'industria']).last() # reagrupa por semana los datos.
-
+  
   base_semana['volumeS']=base.groupby([pd.Grouper(level=0, freq='W-FRI'),'industria']).sum(numeric_only=True)['Volume']
-
+  
   # mayor volumen shares.
-
+  
   base_semana['dif_nom']=base_semana.groupby(level=-1,group_keys=False)['volumeS'].apply(lambda x: x.diff())
   base_semana['dif_nom_med']=base_semana.groupby(level=-1,group_keys=False)['dif_nom'].apply(lambda x: x.rolling(period_med).mean())
-
+  
   # incremento relativo, variacion por sector
-
+  
   base_semana['Var_S']=base_semana.groupby(level=-1,group_keys=False)['volumeS'].apply(lambda x: x.pct_change())
-
+  
   # Incremento CP VOL vs med 36
-
+  
   base_semana['Saldo_CP']=base_semana['acum_dif']-base_semana['acum_med']
-
+  
   # Incremento LP 36 VS 200
-
+  
   base_semana['Saldo_LP']=base_semana['acum_med']-base_semana['tendencia_anual']
-
-
+  
+  
   # Pendiente
-
+  
   # Cantidad de dinero que entro en los sectores en las ultimas xxx semanas
-
+  
   base_semana['dif_s_sector']=base_semana.groupby(level=-1,group_keys=False)['flujo_monetario'].apply(lambda x: x.diff(periods=period_dif))
   base_semana['dif_s_med']=base_semana.groupby(level=-1,group_keys=False)['dif_s_sector'].apply(lambda x: x.rolling(period_med).mean())
-
+  
   #Clasificacion CP y LP
-
+  
   n=len(base_semana.index.get_level_values(1).unique())
   sector=base_semana.index.get_level_values(1).unique()
-
+  
   base_semana['ADCP']=0
   base_semana['ADCP']=0
-
+  
   for i in sector:
-
+  
     CP=base_semana.xs(i,level=1)['Saldo_CP']
     LP=base_semana.xs(i,level=1)['Saldo_LP']
     CP_STD=CP.std()
@@ -315,33 +318,37 @@ def clasif_vol(base,indice,period_dif,period_med):
     LP_m=LP.mean()
     base_semana.loc[(slice(None),i),'ADCP']=np.where(((CP_STD)>CP)&(CP>(-CP_STD)),0,np.where(CP>(CP_STD),1,-1))
     base_semana.loc[(slice(None),i),'ADLP']=np.where(((LP_STD)>LP)&(LP>(-LP_STD)),0,np.where(LP>(LP_STD),1,-1))
-
+  
   #MERCADO GENERAL
-
+  
   #volumen Maximo
-
+  
+  indice=indice.reset_index()
+  indice['Date']=pd.to_datetime(indice['Date'])
+  indice = indice.set_index('Date')
+  
   indiceS=indice.resample('W-FRI').sum()
-
+  
   maximo=indiceS.Volume.max()
-
+  
   fecha_max=indiceS[indiceS['Volume']==maximo].index.values
-
+  
   indiceS['prop_max_I']=(indiceS.Volume/maximo)*100 #Calcula Porcentaje de volumen en relacion a su maximo del periodo.
-
+  
   indiceS['max_roll_I']=indiceS['Volume'].rolling(90).max() # calcula nuevos maximos cada 90 dias
-
+  
   indiceS['prop_max_roll_I']=(indiceS.Volume/indiceS.max_roll_I)*100 #Calcula Porcentaje de volumen en relacion a su maximo de periodos de 90 dias
-
-
+  
+  
   #diferencia 2 semanas.
-
+  
   indiceS['dif_2S_I']=indiceS['Volume'].diff(periods=period_dif) # demuestra interes, candidad de volumen diferencial cada 2 semanas
-
+  
   #Flujo de $
-
+  
   indiceS['flujo_I']=base_semana.groupby('Date').sum(numeric_only=True)['flujo_monetario'] # Cantidad de plata del mercado en total.
   indiceS['dif_f_I']=indiceS['flujo_I'].diff(periods=period_dif) # cantidad de plata o flujo que ingresa o egresa plata al mercado.
-
+  
   # e+08 es el equivalente de multiplicar x * 100.000.000
 
   return base_semana, indiceS
