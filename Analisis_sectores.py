@@ -413,6 +413,9 @@ def base_dato_vol(baseD):
 
   RS,performance=prepdatossector(base,36,'^MERV',10,'industria')
 
+  if not isinstance(performance.index, pd.DatetimeIndex):
+    performance.index = pd.to_datetime(performance.index)
+
   sem=performance.groupby([pd.Grouper(level=0, freq='W-FRI'),'industria']).sum()
 
   #SEGUNDA PARTE
