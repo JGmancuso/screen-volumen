@@ -91,6 +91,7 @@ def RS(df,benchmark,media=36):
   Media: detallar el valor de media que se quiere trabajar para RS, defecto 36
   Posiblemente la ultima fecha no salga como consecuencia de que el indice no siempre tiene hasta la fecha actual cargado el valor.
   Por lo que la formula generalmente otorga resultado con el valor relative strengh del dia anterior.
+  13-09 se ajusta benchmark como variable
   '''
   objetivo=benchmark
 
