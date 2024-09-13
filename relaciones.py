@@ -100,7 +100,7 @@ def RS(df,benchmark,media=36):
   #Preparar base para calculos
   indice=df.data[df.data['activo']==objetivo]['Close'] # contra que se compara cada activo
   activo=df.data.groupby(['Date','activo'])['Close'].sum().unstack('activo')
-  activo.drop('^MERV',axis=1,inplace=True)
+  activo.drop(objetivo,axis=1,inplace=True)
   
   #Calculo
   RS=activo.T/indice*1000
