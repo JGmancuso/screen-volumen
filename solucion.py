@@ -113,6 +113,7 @@ def matriztrabajo_solucion(tickers,start,end,activos='externos'):
   else:
       for i in tickers:  
         df1=yf.download(tickers=i, start=sd, end=ed)
+        df1=df1.droplevel(1,axis=1)
         df1['activo']=i
   
         try:
@@ -151,6 +152,7 @@ def matriztrabajo_solucion(tickers,start,end,activos='externos'):
         
   df4=df4= df4.rename(columns={'index': 'Date'})
   merval=yf.download('^MERV', start=sd, end=ed)
+  merval=merval.droplevel(1,axis=1)
   merval['activo']='^MERV'
   merval.index = pd.to_datetime(merval.index)
   merval.index=merval.index.strftime('%Y-%m-%d')
