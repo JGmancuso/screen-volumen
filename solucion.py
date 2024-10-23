@@ -66,6 +66,7 @@ def matriztrabajo_solucion(tickers,start,end,activos='externos'):
   
   
         df2=yf.download(tickers=i, start=sd_e, end=ed,interval='1h')
+        df2=df2.droplevel(1,axis=1)
         df2['activo']=i
   
         try:
