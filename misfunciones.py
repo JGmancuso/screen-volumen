@@ -611,6 +611,7 @@ def base1m(lista='',nombre='',guardar='si'):
       
       import yfinance as yf
       df1=yf.download(tickers=i, start=sd, end=ed,interval='1m')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       
@@ -621,6 +622,7 @@ def base1m(lista='',nombre='',guardar='si'):
     for i in lista:
       import yfinance as yf
       df1=yf.download(tickers=i, start=sd, end=ed,interval='1m')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       
@@ -652,6 +654,7 @@ def base5m(lista='',nombre='',guardar='si'):
     for i in tickers:
       
       df1=yf.download(tickers=i, start=sd, end=ed,interval='5m')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       
@@ -662,6 +665,7 @@ def base5m(lista='',nombre='',guardar='si'):
     for i in lista:
       
       df1=yf.download(tickers=i, start=sd, end=ed,interval='5m')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       
@@ -693,6 +697,7 @@ def base15m(lista='',nombre='',guardar='si'):
     for i in tickers:
       
       df1=yf.download(tickers=i, start=sd, end=ed,interval='15m')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       
@@ -703,6 +708,7 @@ def base15m(lista='',nombre='',guardar='si'):
     for i in lista:
       
       df1=yf.download(tickers=i, start=sd, end=ed,interval='15m')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       
@@ -735,6 +741,7 @@ def base30m(lista='',nombre='',guardar='si'):
     for i in tickers:
       
       df1=yf.download(tickers=i, start=sd, end=ed,interval='30m')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       
@@ -745,6 +752,7 @@ def base30m(lista='',nombre='',guardar='si'):
     for i in lista:
       
       df1=yf.download(tickers=i, start=sd, end=ed,interval='30m')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       
@@ -775,6 +783,7 @@ def base1h(lista='',nombre='',guardar='si'):
     for i in tickers:
       
       df1=yf.download(tickers=i, start=sd, end=ed,interval='1h')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       df1.rename(columns={'index':'Datetime'},inplace=True)
@@ -786,6 +795,7 @@ def base1h(lista='',nombre='',guardar='si'):
     for i in lista:
       
       df1=yf.download(tickers=i, start=sd, end=ed,interval='1h')
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
       df1.rename(columns={'index':'Datetime'},inplace=True)
