@@ -139,7 +139,7 @@ def criterioploty(matriz,ventana,tipo):
 
   matriz=matriz.loc[:,['acumperf','presion','tipo_sector','momento']]
 
-  matriz['color']=0
+  matriz['color']='yellow'
 
   t=matriz.iloc[ventana:-1].copy()
 
