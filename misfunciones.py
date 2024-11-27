@@ -986,7 +986,8 @@ def screen_activos(df,industrias='',Activos='todos'):
   nombres=['Maduro','En_Maduracion','Inic_Mov','Inic_Fuerte','Crec_Acum','Crec_A_Prom','Crec_Const']
 
   resumen=pd.DataFrame(np.zeros((len(totallist),len(nombres))),columns=nombres,index=totallist)
- 
+
+  resumen= resumen.astype('object')
 
   for i in resumen.index:
     if i in movmaduro:
