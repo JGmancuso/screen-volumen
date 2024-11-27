@@ -860,6 +860,8 @@ def screen_industrias(df):
 
   resumen=pd.DataFrame(np.zeros((len(resumen),len(nombres))),columns=nombres,index=resumen)
 
+  resumen= resumen.astype('object')
+
   for i in resumen.index:
     if i in movmaduro:
       resumen.loc[i,'Maduro']='X'
