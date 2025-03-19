@@ -118,7 +118,7 @@ def clasif_estadoRS(df):
             ]
   tipo=['lider','fuerte','debil','retrasado']
 
-  RS['tipo_sector']=np.select(condicion, tipo, default=np.nan)
+  RS['tipo_sector']=np.select(condicion, tipo, default='N/A')
 
   #MOMENTO.
 
