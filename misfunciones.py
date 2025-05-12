@@ -5,7 +5,7 @@ Created on Wed May  5 14:25:45 2021
 @author: jgome
 """
 
-
+import curl_cffi
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -22,6 +22,7 @@ import os.path
 import yfinance as yf
 import seaborn as sns
 
+session = curl_cffi.Session(impersonate="chrome", timeout=5)
 
 def getsymbol():
   
@@ -176,7 +177,7 @@ def matriztrabajo(tickers,start,end,activos='externos'):
 
     for i in tickers:
     
-      df1=yf.download(tickers=i, start=sd, end=ed)
+      df1=yf.download(tickers=i, start=sd, end=ed,session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       
@@ -221,7 +222,7 @@ def matriztrabajo(tickers,start,end,activos='externos'):
     
     for i in tickers:
 
-      df1=yf.download(tickers=i, start=sd, end=ed)
+      df1=yf.download(tickers=i, start=sd, end=ed,session=session)
       df1['activo']=i
 
       try:
@@ -600,7 +601,7 @@ def base1m(lista='',nombre='',guardar='si'):
   sd=ed - datetime.timedelta(days=7)
 
   tickers= getsymbol()# funcion que determine los ticker automaticamente
-  #df = yf.download(tickers=tickers, start=sd, end=ed)
+  #df = yf.download(tickers=tickers, start=sd, end=ed,session=session)
 
 
   df=pd.DataFrame()
@@ -610,7 +611,7 @@ def base1m(lista='',nombre='',guardar='si'):
     for i in tickers:
       
       import yfinance as yf
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='1m')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='1m',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -621,7 +622,7 @@ def base1m(lista='',nombre='',guardar='si'):
 
     for i in lista:
       import yfinance as yf
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='1m')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='1m',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -645,7 +646,7 @@ def base5m(lista='',nombre='',guardar='si'):
   sd=ed - datetime.timedelta(days=59)
 
   tickers= getsymbol()# funcion que determine los ticker automaticamente
-  #df = yf.download(tickers=tickers, start=sd, end=ed)
+  #df = yf.download(tickers=tickers, start=sd, end=ed,session=session)
 
  
   df=pd.DataFrame()
@@ -653,7 +654,7 @@ def base5m(lista='',nombre='',guardar='si'):
 
     for i in tickers:
       
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='5m')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='5m',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -664,7 +665,7 @@ def base5m(lista='',nombre='',guardar='si'):
 
     for i in lista:
       
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='5m')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='5m',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -688,7 +689,7 @@ def base15m(lista='',nombre='',guardar='si'):
   sd=ed - datetime.timedelta(days=59)
 
   tickers= getsymbol()# funcion que determine los ticker automaticamente
-  #df = yf.download(tickers=tickers, start=sd, end=ed)
+  #df = yf.download(tickers=tickers, start=sd, end=ed,session=session)
 
 
   df=pd.DataFrame()
@@ -696,7 +697,7 @@ def base15m(lista='',nombre='',guardar='si'):
 
     for i in tickers:
       
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='15m')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='15m',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -707,7 +708,7 @@ def base15m(lista='',nombre='',guardar='si'):
 
     for i in lista:
       
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='15m')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='15m',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -731,7 +732,7 @@ def base30m(lista='',nombre='',guardar='si'):
   sd=ed - datetime.timedelta(days=59)
 
   tickers= getsymbol()# funcion que determine los ticker automaticamente
-  #df = yf.download(tickers=tickers, start=sd, end=ed)
+  #df = yf.download(tickers=tickers, start=sd, end=ed,session=session)
 
 
 
@@ -740,7 +741,7 @@ def base30m(lista='',nombre='',guardar='si'):
 
     for i in tickers:
       
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='30m')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='30m',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -751,7 +752,7 @@ def base30m(lista='',nombre='',guardar='si'):
 
     for i in lista:
       
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='30m')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='30m',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -775,14 +776,14 @@ def base1h(lista='',nombre='',guardar='si'):
   sd=ed - datetime.timedelta(days=729)
 
   tickers= getsymbol()# funcion que determine los ticker automaticamente
-  #df = yf.download(tickers=tickers, start=sd, end=ed)
+  #df = yf.download(tickers=tickers, start=sd, end=ed,session=session)
 
   df=pd.DataFrame()
   if lista=='':
 
     for i in tickers:
       
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='1h')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='1h',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -794,7 +795,7 @@ def base1h(lista='',nombre='',guardar='si'):
 
     for i in lista:
       
-      df1=yf.download(tickers=i, start=sd, end=ed,interval='1h')
+      df1=yf.download(tickers=i, start=sd, end=ed,interval='1h',session=session)
       df1=df1.droplevel(1,axis=1)
       df1['activo']=i
       df1.reset_index(inplace=True)
@@ -1328,7 +1329,7 @@ def datosdrawdown(activo):
   sd = '2016-06-10'
   ed = datetime.datetime.utcnow()
   Tickets=[activo]
-  df=yf.download(tickers=Tickets,start=sd,end=ed)
+  df=yf.download(tickers=Tickets,start=sd,end=ed,session=session)
   df['Ret']=(df.Close/df.Close.shift())-1
   df['Max']=df.Close.cummax()
   df['drawdownabs']=df.Close-df.Close.cummax()
