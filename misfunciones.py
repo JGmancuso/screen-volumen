@@ -223,6 +223,7 @@ def matriztrabajo(tickers,start,end,activos='externos'):
     for i in tickers:
 
       df1=yf.download(tickers=i, start=sd, end=ed,session=session)
+      df1=df1.droplevel(1,axis=1)
       df1['activo']=i
 
       try:
