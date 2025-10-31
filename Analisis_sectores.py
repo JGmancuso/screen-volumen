@@ -199,15 +199,35 @@ def plotly_sector(df,condicionG,condicionP,name):
   valori=df[condicionG].unique()
 
   for i in valori:
-
-      fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=df.acumperf.where(df[condicionG] == i),
-            mode='lines+markers',
-            name=i,
-            line_color=df[df[condicionG]==i]['color'].values[0]
-            ))
+      print(i)
+      
+      # 1. Creamos el DataFrame filtrado
+      df_filtrado = df[df[condicionG] == i]
+      
+      # 2. Verificamos si el DataFrame filtrado NO está vacío
+      if not df_filtrado.empty:
+          # Si no está vacío, obtenemos el primer color
+          color_linea = df_filtrado['color'].values[0]
+          
+          # 3. Agregamos el rastro (trace)
+          fig.add_trace(
+              go.Scatter(
+                  x=df.index,
+                  y=df.acumperf.where(df[condicionG] == i),
+                  mode='lines+markers',
+                  name=i,
+                  line_color=color_linea # Usamos la variable de color
+              ))
+      else:
+          # Si el DataFrame está vacío, podemos hacer una de estas cosas:
+          
+          # Opción A (Recomendada): Imprimir un mensaje y saltar a la siguiente iteración
+          print(f"⚠️ Aviso: No se encontraron datos para la categoría '{i}'. Saltando este rastro.")
+          continue  # 'continue' pasa a la siguiente 'i' en el bucle
+          
+          # Opción B (Si quieres dibujar igual): Usar un color por defecto
+          # color_linea = 'grey'
+          # fig.add_trace(...) # Si eliges esta, debes incluir el add_trace() también en el else, o fuera del if/else.
 
 
   # more condition.
