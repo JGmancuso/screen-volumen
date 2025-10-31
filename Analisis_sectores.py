@@ -176,80 +176,152 @@ def criterioploty(matriz,ventana,tipo):
   return t
 
 
-def plotly_sector(df,condicionG,condicionP,name):
-  """
-  df: matriz base para el grafico.
+import plotly.graph_objects as go
+import pandas as pd
 
-  condicionG: si es una clasificacion general de columna
+def plotly_sector(df, condicionG, condicionP, name, stats_df=None):
+    """
+    df: matriz base (critplot)
+    condicionG: 'tipo_sector'
+    condicionP: lista de condiciones puntuales (triángulos)
+    name: Título principal del gráfico.
+    stats_df: DataFrame 'valor' con los conteos de 30/60/90 días.
+    """
+    
+    fig = go.Figure()
 
-  condicionP: si es una condicion puntual, se tiene que poner como filtros en pandas ej si es una condicion & df[(df.condicion=='')&(df.condicion == '').....].
-  esta condicion es una lista [condicion, tipo, nombre]
+    # 1. Línea de Referencia del Mercado (y=0)
+    fig.add_hline(y=0, line_dash="dash", line_color="black", name="Línea Cero")
+    
+    # --------------------------------------------------------------------
+    # ⭐ 2. NUEVA LÓGICA: Dibujar por Segmentos de Color Continuos
+    # --------------------------------------------------------------------
+    
+    # 'df' es 'critplot'
+    # 'condicionG' es 'tipo_sector'
+    
+    # Creamos un 'grupo' cada vez que la categoría (condicionG) cambia
+    df['g'] = (df[condicionG] != df[condicionG].shift()).cumsum()
+    
+    # Iteramos sobre cada segmento (grupo)
+    all_groups = list(df.groupby('g'))
+    
+    # Para gestionar la leyenda (mostrar solo una vez cada categoría)
+    legend_added = []
 
-  """
-  fig = go.Figure()
+    for idx, group in all_groups:
+        
+        # Obtenemos el nombre y color del segmento actual
+        category_name = group[condicionG].iloc[0]
+        category_color = group['color'].iloc[0]
+        
+        # Verificamos si ya añadimos esta categoría a la leyenda
+        show_legend = False
+        if category_name not in legend_added:
+            show_legend = True
+            legend_added.append(category_name)
 
-  fig.add_trace(go.Scatter(
-          x=df.index,
-          y=df.acumperf,
-          name='Perf'))
+        # ----- LA CLAVE PARA CONECTAR LÍNEAS -----
+        # Tomamos el segmento actual...
+        current_segment = group
+        
+        # Buscamos la ubicación del primer punto de este segmento
+        first_index_loc = df.index.get_loc(group.index[0])
+        
+        if first_index_loc > 0:
+            # ...y le añadimos el ÚLTIMO punto del segmento ANTERIOR.
+            # Esto fuerza a Plotly a conectar el segmento rojo con el amarillo.
+            prev_row = df.iloc[[first_index_loc - 1]]
+            current_segment = pd.concat([prev_row, group])
+        # -------------------------------------------
 
+        fig.add_trace(go.Scatter(
+            x=current_segment.index,
+            y=current_segment.acumperf,
+            mode='lines+markers', # Líneas y marcadores
+            name=category_name,
+            line=dict(color=category_color),
+            marker=dict(color=category_color, size=4), # Marcadores pequeños
+            showlegend=show_legend # Solo mostrar en leyenda la primera vez
+        ))
 
-  #valori=pd.DataFrame(df[condicionG].unique()).dropna().values
+    # 3. Trazado de Condiciones Puntuales (Triángulos 'Muy Fuerte')
+    if condicionP:
+        for i in condicionP:
+            fig.add_trace(
+                go.Scatter(
+                    x=i[0].index,
+                    y=i[0]['acumperf'],
+                    mode='markers',
+                    marker=dict(symbol=i[1], size=15),
+                    name=i[2]
+                ))
 
-  valori=df[condicionG].unique()
+    # 4. Actualización de Layout (Título y Ejes)
+    fig.update_layout(
+        title={
+            'text': name,
+            'y':0.95,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+        xaxis_title="Fecha",
+        yaxis_title="Desempeño Acumulado Relativo al Índice",
+        legend_title="Clasificación",
+        template="plotly_white",
+        # Quitamos el rangeslider como pediste
+    )
 
-  for i in valori:
-      print(i)
-      
-      # 1. Creamos el DataFrame filtrado
-      df_filtrado = df[df[condicionG] == i]
-      
-      # 2. Verificamos si el DataFrame filtrado NO está vacío
-      if not df_filtrado.empty:
-          # Si no está vacío, obtenemos el primer color
-          color_linea = df_filtrado['color'].values[0]
-          
-          # 3. Agregamos el rastro (trace)
-          fig.add_trace(
-              go.Scatter(
-                  x=df.index,
-                  y=df.acumperf.where(df[condicionG] == i),
-                  mode='lines+markers',
-                  name=i,
-                  line_color=color_linea # Usamos la variable de color
-              ))
-      else:
-          # Si el DataFrame está vacío, podemos hacer una de estas cosas:
-          
-          # Opción A (Recomendada): Imprimir un mensaje y saltar a la siguiente iteración
-          print(f"⚠️ Aviso: No se encontraron datos para la categoría '{i}'. Saltando este rastro.")
-          continue  # 'continue' pasa a la siguiente 'i' en el bucle
-          
-          # Opción B (Si quieres dibujar igual): Usar un color por defecto
-          # color_linea = 'grey'
-          # fig.add_trace(...) # Si eliges esta, debes incluir el add_trace() también en el else, o fuera del if/else.
+    # 5. Anotación de Estadísticas (El "Frame")
+    if stats_df is not None:
+        
+        # Encontrar el ancho máximo del índice para alinear
+        max_len_index = max(len(idx) for idx in stats_df.index) + 1 # +1 para espacio
+        
+        # Construir el string de texto
+        stats_text = f"<b>Clasificación (días)</b><br>"
+        
+        # Header
+        header = " " * max_len_index # Espacio para el índice
+        for col in stats_df.columns:
+            header += f" | {col:>3}" # >3 alinea a la derecha con 3 espacios
+        stats_text += header + "<br>"
+        
+        # Separador
+        separator = "-" * max_len_index
+        for col in stats_df.columns:
+            separator += " | ---"
+        stats_text += separator + "<br>"
 
+        # Filas de datos
+        for index, row in stats_df.iterrows():
+            padded_index = f"{index:<{max_len_index}}" # < alinea a la izquierda
+            line = f"{padded_index}"
+            for col in stats_df.columns:
+                line += f" | {row[col]:>3}" # >3 alinea a la derecha
+            stats_text += line + "<br>"
+        
+        # Añadimos la Anotación
+        fig.add_annotation(
+            text=stats_text,
+            align='left',
+            showarrow=False,
+            xref='paper',
+            yref='paper',
+            x=0.01,
+            y=0.99,
+            yanchor='top',
+            xanchor='left',
+            bordercolor='black',
+            borderwidth=1,
+            bgcolor='rgba(255, 255, 240, 0.85)',
+            font=dict(
+                family="Monospace, Courier New, Courier",
+                size=12
+            )
+        )
 
-  # more condition.
-  if condicionP!='':
-
-    for i in condicionP:
-
-      fig.add_trace(
-          go.Scatter(
-              x=i[0].index,
-              y=i[0]['acumperf'],
-              mode='markers',
-              marker=dict(
-                  symbol=i[1],
-                  size=20),
-              name=i[2]
-              ))
-
-  fig.update_layout(title=name)
-
-
-  fig.show()
+    fig.show()
 
 def encontrarNan(df,tipo='columnas'):
   '''
