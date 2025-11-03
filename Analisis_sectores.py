@@ -187,34 +187,34 @@ def plotly_sector(df, condicionG, condicionP, name, stats_df=None):
     name: Título principal del gráfico.
     stats_df: DataFrame 'valor' con los conteos de 30/60/90 días.
     """
-    
+
     fig = go.Figure()
 
     # 1. Línea de Referencia del Mercado (y=0)
     fig.add_hline(y=0, line_dash="dash", line_color="black", name="Línea Cero")
-    
+
     # --------------------------------------------------------------------
     # ⭐ 2. NUEVA LÓGICA: Dibujar por Segmentos de Color Continuos
     # --------------------------------------------------------------------
-    
+
     # 'df' es 'critplot'
     # 'condicionG' es 'tipo_sector'
-    
+
     # Creamos un 'grupo' cada vez que la categoría (condicionG) cambia
     df['g'] = (df[condicionG] != df[condicionG].shift()).cumsum()
-    
+
     # Iteramos sobre cada segmento (grupo)
     all_groups = list(df.groupby('g'))
-    
+
     # Para gestionar la leyenda (mostrar solo una vez cada categoría)
     legend_added = []
 
     for idx, group in all_groups:
-        
+
         # Obtenemos el nombre y color del segmento actual
         category_name = group[condicionG].iloc[0]
         category_color = group['color'].iloc[0]
-        
+
         # Verificamos si ya añadimos esta categoría a la leyenda
         show_legend = False
         if category_name not in legend_added:
@@ -224,10 +224,10 @@ def plotly_sector(df, condicionG, condicionP, name, stats_df=None):
         # ----- LA CLAVE PARA CONECTAR LÍNEAS -----
         # Tomamos el segmento actual...
         current_segment = group
-        
+
         # Buscamos la ubicación del primer punto de este segmento
         first_index_loc = df.index.get_loc(group.index[0])
-        
+
         if first_index_loc > 0:
             # ...y le añadimos el ÚLTIMO punto del segmento ANTERIOR.
             # Esto fuerza a Plotly a conectar el segmento rojo con el amarillo.
@@ -272,25 +272,42 @@ def plotly_sector(df, condicionG, condicionP, name, stats_df=None):
         # Quitamos el rangeslider como pediste
     )
 
-    # 5. Anotación de Estadísticas (El "Frame")
+    # --------------------------------------------------------------------
+    # ⭐ 5. Anotación de Estadísticas (LÓGICA ACTUALIZADA) ⭐
+    #    (Esta sección ahora ajusta el ancho de las columnas dinámicamente)
+    # --------------------------------------------------------------------
     if stats_df is not None:
         
-        # Encontrar el ancho máximo del índice para alinear
-        max_len_index = max(len(idx) for idx in stats_df.index) + 1 # +1 para espacio
+        # 1. Encontrar el ancho máximo del índice
+        max_len_index = max(len(idx) for idx in stats_df.index) + 1 
         
-        # Construir el string de texto
+        # 2. NUEVO: Calcular anchos de columna dinámicos
+        col_widths = {}
+        for col in stats_df.columns:
+            # El ancho es el máximo entre el título (ej. 'cum_60') y el número más grande (ej. 90)
+            try:
+                max_num_width = len(str(stats_df[col].max()))
+            except ValueError:
+                max_num_width = 2 # Default
+            
+            col_name_width = len(str(col))
+            col_widths[col] = max(max_num_width, col_name_width) + 1 # +1 para padding
+            
+        # 3. Construir el string de texto
         stats_text = f"<b>Clasificación (días)</b><br>"
         
         # Header
-        header = " " * max_len_index # Espacio para el índice
+        header = " " * max_len_index 
         for col in stats_df.columns:
-            header += f" | {col:>3}" # >3 alinea a la derecha con 3 espacios
+            width = col_widths[col]
+            header += f" | {col:>{width}}" # Usar ancho dinámico
         stats_text += header + "<br>"
         
         # Separador
         separator = "-" * max_len_index
         for col in stats_df.columns:
-            separator += " | ---"
+            width = col_widths[col]
+            separator += " | " + ("-" * width)
         stats_text += separator + "<br>"
 
         # Filas de datos
@@ -298,10 +315,11 @@ def plotly_sector(df, condicionG, condicionP, name, stats_df=None):
             padded_index = f"{index:<{max_len_index}}" # < alinea a la izquierda
             line = f"{padded_index}"
             for col in stats_df.columns:
-                line += f" | {row[col]:>3}" # >3 alinea a la derecha
+                width = col_widths[col]
+                line += f" | {row[col]:>{width}}" # Usar ancho dinámico
             stats_text += line + "<br>"
         
-        # Añadimos la Anotación
+        # 4. Añadimos la Anotación
         fig.add_annotation(
             text=stats_text,
             align='left',
