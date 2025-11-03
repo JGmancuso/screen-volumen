@@ -179,7 +179,7 @@ def criterioploty(matriz,ventana,tipo):
 import plotly.graph_objects as go
 import pandas as pd
 
-def plotly_sector(df, condicionG, condicionP, name, stats_df=None):
+def plotly_sector1(df, condicionG, condicionP, name, stats_df=None):
     """
     df: matriz base (critplot)
     condicionG: 'tipo_sector'
@@ -614,3 +614,274 @@ def base_dato_vol(baseD):
 
 
   return base,indice,sem
+
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
+
+# --- (Aquí van las funciones que memorizamos) ---
+
+def base_dato_vol(baseD):
+    # (Pega aquí la función 'base_dato_vol' que memorizamos,
+    # la que calcula 'acum_dif' y 'ad_line_chaikin')
+    # ... (código de base_dato_vol) ...
+    # (Solo como recordatorio, aquí está la versión que memorizamos)
+
+    # PRIMERA PARTE (Setup)
+    df=pd.DataFrame()
+    # (Asegúrate de que la ruta al Excel sea correcta)
+    info_excel=pd.read_excel("/content/drive/MyDrive/activosectorV.xlsx",index_col='activo')
+    info_excel=info_excel[['sector','industria','investing']]
+    info_excel.reset_index(inplace=True)
+
+    base=baseD.data.copy()
+
+    # Asignar industria a 'base'
+    for i in base.activo.dropna().unique():
+        if i in info_excel['activo'].values:
+            base.loc[base["activo"] == i, 'industria'] = info_excel[info_excel["activo"] == i]['investing'].values[0]
+        else:
+            base.loc[base["activo"] == i, 'industria'] = 'Desconocido'
+
+    # SEGUNDA PARTE (Cálculos de Volumen)
+    df1=baseD.data.copy()
+
+    # 1. Flujo Monetario (Método 1: Precio Típico * Vol)
+    df1['flujo_monetario']=((df1['Low']+df1['High']+df1['Close'])/3)*df1['Volume']
+
+    # 2. NUEVO: Flujo Monetario (Método 2: Chaikin A/D)
+    mfm_num = ((df1['Close'] - df1['Low']) - (df1['High'] - df1['Close']))
+    mfm_den = (df1['High'] - df1['Low'])
+    mfm = mfm_num / mfm_den
+    mfm = mfm.fillna(0) # Si High == Low, den=0, mfm=NaN. Asumimos 0.
+    mfm = mfm.clip(lower=-1, upper=1)
+    df1['chaikin_mfv'] = mfm * df1['Volume']
+
+    # Asignar industria a 'df1'
+    for i in df1.activo.dropna().unique():
+        if i in info_excel['activo'].values:
+            df1.loc[df1["activo"] == i, 'industria'] = info_excel[info_excel["activo"] == i]['investing'].values[0]
+        else:
+            df1.loc[df1["activo"] == i, 'industria'] = 'Desconocido'
+
+    info = df1[['Volume','activo','industria','flujo_monetario','chaikin_mfv']]
+
+    comparacion='industria'
+    base = info.copy()
+    g = pd.DataFrame()
+
+    # normalizar activo (TU MÉTODO DE MOMENTUM)
+    for sector in base['activo'].unique():
+        filtro=base[base['activo']==sector]['Volume']
+        max_val=filtro.max()
+        min_val=filtro.min()
+        filtro2=base[base['activo']==sector].copy()
+        if (max_val - min_val) != 0:
+            norm_col = (((filtro) - (min_val)) / ((max_val) - (min_val)))
+        else:
+            norm_col = 0.0
+        filtro2['norm'] = norm_col
+        g = pd.concat([g, filtro2])
+
+    base_grouped = g.groupby(['Date',comparacion]).sum(numeric_only=True)
+
+    # 1. TU MÉTODO (Momentum de Volumen Normalizado)
+    base_grouped['normmed50']=base_grouped.groupby(level=-1,group_keys=False)['norm'].apply(lambda x: x.rolling(50).mean())
+    base_grouped['dif_norm_media']=base_grouped.groupby(level=-1,group_keys=False).apply(lambda x: x['norm']-x['normmed50'])
+    base_grouped['acum_dif']=base_grouped.groupby(level=-1,group_keys=False)['dif_norm_media'].cumsum() # <-- LÍNEA CLAVE 1 (A/D Mom.)
+    base_grouped['acum_med']=base_grouped.groupby(level=-1,group_keys=False)['acum_dif'].apply(lambda x: x.rolling(36).mean())
+    base_grouped['tendencia_anual']=base_grouped.groupby(level=-1,group_keys=False)['acum_dif'].apply(lambda x: x.rolling(200).mean())
+
+    # 2. NUEVO: MÉTODO CHAIKIN (A/D Line)
+    base_grouped['ad_line_chaikin'] = base_grouped.groupby(level=-1,group_keys=False)['chaikin_mfv'].cumsum() # <-- LÍNEA CLAVE 2 (A/D Flujo)
+
+    indice=base_grouped.reset_index().groupby('Date').sum(numeric_only=True)[['Volume','norm']]
+    indice['normmed50']=indice['norm'].rolling(50).mean()
+    indice['dif_norm_media']=indice['norm']-indice['normmed50']
+    indice['acum_dif']=indice['dif_norm_media'].cumsum()
+    indice['acum_med']=indice['acum_dif'].rolling(36).mean()
+
+    return base_grouped, indice
+
+
+def plotly_sector(df, condicionG, condicionP, name, stats_df=None, vol_stats_df=None, vol_chaikin_stats_df=None):
+    # (Pega aquí la función 'plotly_sector' que memorizamos,
+    # la que tiene 3 recuadros y corrige el error de 'y=0.78')
+    # ... (código de plotly_sector) ...
+    fig = go.Figure()
+    fig.add_hline(y=0, line_dash="dash", line_color="black", name="Línea Cero")
+    df['g'] = (df[condicionG] != df[condicionG].shift()).cumsum()
+    all_groups = list(df.groupby('g'))
+    legend_added = []
+    for idx, group in all_groups:
+        category_name = group[condicionG].iloc[0]
+        category_color = group['color'].iloc[0]
+        show_legend = False
+        if category_name not in legend_added:
+            show_legend = True
+            legend_added.append(category_name)
+        current_segment = group
+        first_index_loc = df.index.get_loc(group.index[0])
+        if first_index_loc > 0:
+            prev_row = df.iloc[[first_index_loc - 1]]
+            current_segment = pd.concat([prev_row, group])
+
+        fig.add_trace(go.Scatter(
+            x=current_segment.index, y=current_segment.acumperf,
+            mode='lines+markers', name=category_name,
+            line=dict(color=category_color),
+            marker=dict(color=category_color, size=4),
+            showlegend=show_legend
+        ))
+    if condicionP:
+        for i in condicionP:
+            fig.add_trace(
+                go.Scatter(
+                    x=i[0].index, y=i[0]['acumperf'], mode='markers',
+                    marker=dict(symbol=i[1], size=15), name=i[2]
+                ))
+    fig.update_layout(
+        title={'text': name, 'y':0.95, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top'},
+        xaxis_title="Fecha", yaxis_title="Desempeño Acumulado Relativo al Índice",
+        legend_title="Clasificación", template="plotly_white",
+        yaxis_fixedrange=False
+    )
+    if stats_df is not None:
+        stats_text_rs = build_stats_table(stats_df, "Clasificación RS (días)")
+        fig.add_annotation(
+            text=stats_text_rs, align='left', showarrow=False, xref='paper', yref='paper',
+            x=0.01, y=0.99, yanchor='top', xanchor='left',
+            bordercolor='black', borderwidth=1,
+            bgcolor='rgba(255, 255, 240, 0.85)',
+            font=dict(family="Monospace, Courier New, Courier", size=12)
+        )
+    if vol_stats_df is not None:
+        stats_text_vol = build_stats_table(vol_stats_df, "Vol A/D Momentum (Cambio)", float_format=",.1f")
+        fig.add_annotation(
+            text=stats_text_vol, align='left', showarrow=False, xref='paper', yref='paper',
+            x=0.01, y=0.45, yanchor='top', xanchor='left', # (y=0.78)
+            bordercolor='black', borderwidth=1,
+            bgcolor='rgba(240, 255, 240, 0.85)',
+            font=dict(family="Monospace, Courier New, Courier", size=12)
+        )
+    if vol_chaikin_stats_df is not None:
+        stats_text_chaikin = build_stats_table(vol_chaikin_stats_df, "Vol A/D Chaikin (Flujo)", float_format=",.1f")
+        fig.add_annotation(
+            text=stats_text_chaikin, align='left', showarrow=False, xref='paper', yref='paper',
+            x=0.01, y=0.25, yanchor='top', xanchor='left', # (y=0.57)
+            bordercolor='black', borderwidth=1,
+            bgcolor='rgba(240, 240, 255, 0.85)',
+            font=dict(family="Monospace, Courier New, Courier", size=12)
+        )
+    fig.show(config={'scrollZoom': True})
+
+
+# --- (Funciones de Ayuda que hemos creado) ---
+
+def build_stats_table(df, title, float_format=None):
+    """Construye un string de texto monoespaciado a partir de un DataFrame."""
+    try:
+        max_len_index = max(len(str(idx)) for idx in df.index) + 1
+        col_widths = {}
+        for col in df.columns:
+            if float_format:
+                try: max_num_width = max(len(f"{x:{float_format}}") for x in df[col])
+                except ValueError: max_num_width = 4
+            else:
+                try: max_num_width = max(len(str(int(x))) for x in df[col])
+                except ValueError: max_num_width = 2
+            col_name_width = len(str(col))
+            col_widths[col] = max(max_num_width, col_name_width) + 1
+
+        stats_text = f"<b>{title}</b><br>"
+        header = " " * max_len_index
+        for col in df.columns:
+            width = col_widths[col]
+            header += f" | {col:>{width}}"
+        stats_text += header + "<br>"
+        separator = "-" * max_len_index
+        for col in df.columns:
+            width = col_widths[col]
+            separator += " | " + ("-" * width)
+        stats_text += separator + "<br>"
+        for index, row in df.iterrows():
+            padded_index = f"{str(index):<{max_len_index}}"
+            line = f"{padded_index}"
+            for col in df.columns:
+                width = col_widths[col]
+                if float_format: val_str = f"{row[col]:{float_format}}"
+                else: val_str = f"{int(row[col])}"
+                line += f" | {val_str:>{width}}"
+            stats_text += line + "<br>"
+        return stats_text
+    except Exception as e:
+        print(f"Error al construir tabla '{title}': {e}")
+        return "" # Devuelve un string vacío si falla
+
+
+def count_stats(data_slice):
+    """Cuenta las clasificaciones en una porción de datos (Serie de pandas)."""
+    lider = data_slice[data_slice == 'lider'].count()
+    fuerte = data_slice[data_slice == 'fuerte'].count()
+    debil = data_slice[data_slice == 'debil'].count()
+    retrasado = data_slice[data_slice == 'retrasado'].count()
+    return [lider, fuerte, debil, retrasado]
+
+
+# --- (NUEVAS Funciones de Cálculo para limpiar el bucle) ---
+
+def calculate_rs_stats(rs_data, industry_name, column_order):
+    """Calcula la tabla de estadísticas de RS."""
+    datos_valor = {}
+    try:
+        tipo_comp_90_dias = rs_data.xs(industry_name, level=1)['tipo_sector'].iloc[-90:]
+
+        chunk_30_dias = tipo_comp_90_dias.iloc[-30:]
+        chunk_60_dias = tipo_comp_90_dias.iloc[-60:-30]
+        chunk_90_dias = tipo_comp_90_dias.iloc[-90:-60]
+        chunk_cum_60 = tipo_comp_90_dias.iloc[-60:]
+        chunk_cum_90 = tipo_comp_90_dias
+
+        datos_valor['30'] = count_stats(chunk_30_dias)
+        datos_valor['60'] = count_stats(chunk_60_dias)
+        datos_valor['90'] = count_stats(chunk_90_dias)
+        datos_valor['cum_60'] = count_stats(chunk_cum_60)
+        datos_valor['cum_90'] = count_stats(chunk_cum_90)
+
+    except Exception as e:
+        # print(f"Advertencia (RS) para {industry_name}: {e}")
+        empty_stats = [0, 0, 0, 0]
+        datos_valor = {'30': empty_stats, '60': empty_stats, '90': empty_stats, 'cum_60': empty_stats, 'cum_90': empty_stats}
+
+    valor = pd.DataFrame(datos_valor, index=['lider', 'fuerte', 'debil', 'retrasado'])
+    return valor[column_order]
+
+
+def calculate_ad_stats(ad_series_91_days, index_name, column_order):
+    """Calcula el delta (cambio) para una serie de A/D."""
+    datos_valor_ad = {}
+    try:
+        n = len(ad_series_91_days)
+        if n < 2:
+            raise Exception("Datos insuficientes")
+
+        # Lógica robusta para períodos cortos
+        ad_0 = ad_series_91_days.iloc[-1]
+        ad_30 = ad_series_91_days.iloc[0] if n < 31 else ad_series_91_days.iloc[-31]
+        ad_60 = ad_series_91_days.iloc[0] if n < 61 else ad_series_91_days.iloc[-61]
+        ad_90 = ad_series_91_days.iloc[0]
+
+        datos_valor_ad['30'] = [ad_0 - ad_30]
+        datos_valor_ad['60'] = [ad_30 - ad_60]
+        datos_valor_ad['90'] = [ad_60 - ad_90]
+        datos_valor_ad['cum_60'] = [ad_0 - ad_60]
+        datos_valor_ad['cum_90'] = [ad_0 - ad_90]
+
+    except Exception as e:
+        # print(f"Advertencia (A/D) para {index_name}: {e}")
+        datos_valor_ad = {'30':[0], '60':[0], '90':[0], 'cum_60':[0], 'cum_90':[0]}
+
+    valor_ad = pd.DataFrame(datos_valor_ad, index=[index_name])
+    return valor_ad[column_order]
+
